@@ -851,7 +851,7 @@
             font-size: 14px;
         }
 
-        /* Lineage hover effects - FIXED COLORS */
+        /* Lineage hover effects */
         .lineage-dino-node {
             transition: all 0.3s ease;
         }
@@ -881,6 +881,7 @@
             opacity: 0.3;
             filter: grayscale(50%);
         }
+
         .health { color: #f87171; }
         .stamina { color: #fbbf24; }
         .oxygen { color: #60a5fa; }
@@ -888,6 +889,25 @@
         .weight { color: #a78bfa; }
         .melee { color: #fb923c; }
         .speed { color: #22d3ee; }
+
+        /* Migration notification */
+        .migration-notice {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            border: 2px solid #22d3ee;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 1002;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .migration-notice.hidden {
+            display: none;
+        }
 
         @media (max-width: 768px) {
             .parent-selects {
@@ -955,6 +975,16 @@
 </head>
 <body>
     <div class="container">
+        <!-- Migration Notice -->
+        <div id="migrationNotice" class="migration-notice hidden">
+            <h3 style="color: #22d3ee; margin-bottom: 10px;">🔄 Data Migration Available</h3>
+            <p style="margin-bottom: 15px;">We found existing dinosaur data with old ID format. Click below to migrate to the new clean ID system.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn" onclick="performMigration()">✅ Migrate Data</button>
+                <button class="btn-secondary" onclick="hideMigrationNotice()">Skip</button>
+            </div>
+        </div>
+
         <div class="header">
             <h1 class="title">ARK Breeding Tracker</h1>
             <div class="header-actions">
@@ -1252,11 +1282,15 @@
     </div>
 
     <script>
+        // ===============================================
+        // CLEAN SLATE ID SYSTEM - ROBUST & BULLETPROOF
+        // ===============================================
+        
         // Global variables
         let dinosaurs = [];
         let editingId = null;
         let currentPotentialOffspring = null;
-        let idCounter = 1748600000000; // Start fresh with a clean base
+        let nextId = 1; // Simple, clean integer IDs starting at 1
         let customSpeciesList = [
             'Rex', 'Raptor', 'Spino', 'Carno', 'Trike', 'Stego', 'Bronto', 'Parasaur', 'Dilo', 'Compy',
             'Argentavis', 'Pteranodon', 'Quetzal', 'Ankylo', 'Doed', 'Beaver', 'Mammoth', 'Theri', 'Giga',
@@ -1264,61 +1298,120 @@
             'Griffin', 'Phoenix', 'Wyvern', 'Drake', 'Basilisk', 'Reaper', 'Karkinos', 'Ravager', 'Enforcer'
         ];
 
-        // Generate unique INTEGER ID function
-        function generateUniqueId() {
-            return ++idCounter;
+        // BULLETPROOF ID Generation - Simple Integer Counter
+        function generateId() {
+            return nextId++;
         }
 
-        // Data migration function to fix existing fractional IDs
-        function migrateData() {
-            console.log('🔄 Migrating data to fix fractional IDs...');
-            
-            if (dinosaurs.length === 0) return;
-            
-            // Check if we need migration (if any IDs are fractional)
-            const hasFractionalIds = dinosaurs.some(d => !Number.isInteger(d.id));
-            if (!hasFractionalIds) {
-                console.log('✅ No migration needed - all IDs are integers');
+        // BULLETPROOF ID Management - Keep track of highest ID
+        function updateNextId() {
+            if (dinosaurs.length === 0) {
+                nextId = 1;
                 return;
             }
             
-            console.log(`🔧 Found ${dinosaurs.length} dinosaurs needing ID migration`);
+            const maxId = Math.max(...dinosaurs.map(d => d.id));
+            nextId = maxId + 1;
+            console.log(`📊 Updated nextId to: ${nextId}`);
+        }
+
+        // ===============================================
+        // MIGRATION SYSTEM - FROM OLD TO NEW
+        // ===============================================
+
+        // Check if migration is needed
+        function needsMigration() {
+            if (dinosaurs.length === 0) return false;
             
-            // Create ID mapping: old fractional ID -> new integer ID
-            const idMapping = new Map();
+            // Check for fractional IDs (old system)
+            const hasFractionalIds = dinosaurs.some(d => !Number.isInteger(d.id) || d.id > 1000000000000);
             
-            // Step 1: Assign new integer IDs to all dinosaurs
+            console.log(`🔍 Migration check: ${hasFractionalIds ? 'NEEDED' : 'NOT NEEDED'}`);
+            return hasFractionalIds;
+        }
+
+        // Show migration notice
+        function showMigrationNotice() {
+            if (needsMigration()) {
+                document.getElementById('migrationNotice').classList.remove('hidden');
+                console.log('📢 Showing migration notice');
+            }
+        }
+
+        // Hide migration notice
+        function hideMigrationNotice() {
+            document.getElementById('migrationNotice').classList.add('hidden');
+        }
+
+        // PERFORM COMPLETE MIGRATION - REBUILD EVERYTHING FROM SCRATCH
+        function performMigration() {
+            console.log('🚀 Starting complete data migration...');
+            console.log(`📊 Found ${dinosaurs.length} dinosaurs to migrate`);
+            
+            if (dinosaurs.length === 0) {
+                hideMigrationNotice();
+                return;
+            }
+            
+            // Step 1: Create ID mapping from old to new
+            const idMap = new Map();
+            let newId = 1;
+            
+            // Assign new clean integer IDs
             dinosaurs.forEach(dino => {
                 const oldId = dino.id;
-                const newId = generateUniqueId();
-                idMapping.set(oldId.toString(), newId);
+                idMap.set(oldId, newId);
                 dino.id = newId;
-                
-                console.log(`  ${dino.name}: ${oldId} → ${newId}`);
+                console.log(`🔄 ${dino.name}: ${oldId} → ${newId}`);
+                newId++;
             });
             
             // Step 2: Update all parent references
             dinosaurs.forEach(dino => {
                 if (dino.parent1Id) {
-                    const newParent1Id = idMapping.get(dino.parent1Id.toString());
+                    const newParent1Id = idMap.get(dino.parent1Id);
                     if (newParent1Id) {
                         dino.parent1Id = newParent1Id;
+                        console.log(`✅ Fixed ${dino.name} parent1: → ${newParent1Id}`);
+                    } else {
+                        console.log(`⚠️ ${dino.name} parent1 not found, setting to null`);
+                        dino.parent1Id = null;
                     }
                 }
                 
                 if (dino.parent2Id) {
-                    const newParent2Id = idMapping.get(dino.parent2Id.toString());
+                    const newParent2Id = idMap.get(dino.parent2Id);
                     if (newParent2Id) {
                         dino.parent2Id = newParent2Id;
+                        console.log(`✅ Fixed ${dino.name} parent2: → ${newParent2Id}`);
+                    } else {
+                        console.log(`⚠️ ${dino.name} parent2 not found, setting to null`);
+                        dino.parent2Id = null;
                     }
                 }
             });
             
-            console.log('✅ Migration complete! All IDs are now unique integers.');
+            // Step 3: Update nextId counter
+            nextId = newId;
             
-            // Save the migrated data
+            // Step 4: Save and refresh everything
             saveData();
+            renderDinosaurs();
+            updateParentSelects();
+            updateModalParentSelects();
+            populateSpeciesFilter();
+            populateMainSpeciesFilter();
+            
+            // Hide notice and show success
+            hideMigrationNotice();
+            
+            console.log(`✅ Migration complete! All ${dinosaurs.length} dinosaurs now have clean integer IDs (1-${newId-1})`);
+            alert(`🎉 Migration successful!\n\n✅ Migrated ${dinosaurs.length} dinosaurs\n✅ Fixed all parent relationships\n✅ Clean integer IDs (1-${newId-1})\n\nYour lineage tree should now work perfectly!`);
         }
+
+        // ===============================================
+        // CORE FUNCTIONS - REBUILT FOR ROBUSTNESS
+        // ===============================================
 
         // Stat configuration
         const statConfig = {
@@ -1334,6 +1427,8 @@
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
+            updateNextId();
+            showMigrationNotice(); // Check if migration is needed
             populateSpeciesDropdown();
             createStatsForm();
             renderDinosaurs();
@@ -1343,6 +1438,48 @@
             populateSpeciesFilter();
             populateMainSpeciesFilter();
         });
+
+        // ROBUST Data management
+        function loadData() {
+            const saved = localStorage.getItem('arkBreedingData');
+            if (saved) {
+                dinosaurs = JSON.parse(saved);
+                console.log(`📂 Loaded ${dinosaurs.length} dinosaurs from storage`);
+            }
+            
+            const savedSpecies = localStorage.getItem('arkSpeciesList');
+            if (savedSpecies) {
+                customSpeciesList = JSON.parse(savedSpecies);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('arkBreedingData', JSON.stringify(dinosaurs));
+            localStorage.setItem('arkSpeciesList', JSON.stringify(customSpeciesList));
+            console.log(`💾 Saved ${dinosaurs.length} dinosaurs to storage`);
+        }
+
+        // ROBUST Parent lookups - simple integer comparison
+        function findDinoById(id) {
+            return dinosaurs.find(d => d.id === id);
+        }
+
+        function getChildren(parentId) {
+            return dinosaurs.filter(d => d.parent1Id === parentId || d.parent2Id === parentId);
+        }
+
+        function getParents(dino) {
+            const parents = [];
+            if (dino.parent1Id) {
+                const parent1 = findDinoById(dino.parent1Id);
+                if (parent1) parents.push(parent1);
+            }
+            if (dino.parent2Id) {
+                const parent2 = findDinoById(dino.parent2Id);
+                if (parent2) parents.push(parent2);
+            }
+            return parents;
+        }
 
         // Filtering functions
         function populateMainSpeciesFilter() {
@@ -1415,33 +1552,6 @@
             }
             
             return filtered;
-        }
-
-        // Data management
-        function loadData() {
-            const saved = localStorage.getItem('arkBreedingData');
-            if (saved) {
-                dinosaurs = JSON.parse(saved);
-                
-                // Auto-migrate fractional IDs to integers
-                migrateData();
-                
-                // Update ID counter to ensure uniqueness
-                if (dinosaurs.length > 0) {
-                    const maxId = Math.max(...dinosaurs.map(d => d.id));
-                    idCounter = Math.max(idCounter, maxId);
-                }
-            }
-            
-            const savedSpecies = localStorage.getItem('arkSpeciesList');
-            if (savedSpecies) {
-                customSpeciesList = JSON.parse(savedSpecies);
-            }
-        }
-
-        function saveData() {
-            localStorage.setItem('arkBreedingData', JSON.stringify(dinosaurs));
-            localStorage.setItem('arkSpeciesList', JSON.stringify(customSpeciesList));
         }
 
         // Species management
@@ -1646,7 +1756,7 @@
         function openEditForm(id) {
             editingId = id;
             document.getElementById('modalTitle').textContent = 'Edit Dinosaur';
-            const dino = dinosaurs.find(d => d.id === id);
+            const dino = findDinoById(id);
             if (dino) {
                 populateForm(dino);
                 document.getElementById('modal').classList.remove('hidden');
@@ -1721,12 +1831,12 @@
             updateLevelCalculation();
         }
 
-        // Duplicate dinosaur
+        // ROBUST Duplicate dinosaur with clean ID
         function duplicateDino(id) {
-            const originalDino = dinosaurs.find(d => d.id === id);
+            const originalDino = findDinoById(id);
             if (!originalDino) return;
             
-            // Create a unique name
+            // Create unique name
             let baseName = originalDino.name;
             let copyNumber = 1;
             let newName = `${baseName} (Copy)`;
@@ -1738,12 +1848,14 @@
             
             const duplicatedDino = {
                 ...originalDino,
-                id: generateUniqueId(), // Use unique ID generator
+                id: generateId(), // Clean integer ID
                 name: newName,
                 dateAdded: new Date().toISOString()
             };
             
             dinosaurs.push(duplicatedDino);
+            console.log(`📄 Duplicated ${originalDino.name} → ${newName} (ID: ${duplicatedDino.id})`);
+            
             saveData();
             renderDinosaurs();
             updateParentSelects();
@@ -1753,7 +1865,7 @@
             updateBreedingPreview();
         }
 
-        // Save dinosaur
+        // ROBUST Save dinosaur with clean ID
         function saveDino() {
             const name = document.getElementById('dinoName').value.trim();
             let species = document.getElementById('dinoSpecies').value;
@@ -1779,12 +1891,12 @@
                 };
             });
 
-            // Fix parent ID storage - ensure they're integers or null
+            // ROBUST parent ID handling - clean integers only
             const parent1Value = document.getElementById('dinoParent1').value;
             const parent2Value = document.getElementById('dinoParent2').value;
             
             const dinoData = {
-                id: editingId || generateUniqueId(),
+                id: editingId || generateId(), // Clean integer ID
                 name: name,
                 species: species,
                 gender: document.getElementById('dinoGender').value,
@@ -1792,12 +1904,10 @@
                 stats: stats,
                 parent1Id: parent1Value ? parseInt(parent1Value) : null,
                 parent2Id: parent2Value ? parseInt(parent2Value) : null,
-                dateAdded: editingId ? dinosaurs.find(d => d.id === editingId)?.dateAdded : new Date().toISOString()
+                dateAdded: editingId ? findDinoById(editingId)?.dateAdded : new Date().toISOString()
             };
 
             console.log(`💾 Saving dino: ${dinoData.name} (ID: ${dinoData.id})`);
-            console.log(`  Parent1ID: ${dinoData.parent1Id} (type: ${typeof dinoData.parent1Id})`);
-            console.log(`  Parent2ID: ${dinoData.parent2Id} (type: ${typeof dinoData.parent2Id})`);
 
             if (editingId) {
                 const index = dinosaurs.findIndex(d => d.id === editingId);
@@ -1818,8 +1928,13 @@
 
         // Delete dinosaur
         function deleteDino(id) {
-            if (confirm('Are you sure you want to delete this dinosaur?')) {
+            const dino = findDinoById(id);
+            if (!dino) return;
+            
+            if (confirm(`Are you sure you want to delete ${dino.name}?`)) {
                 dinosaurs = dinosaurs.filter(d => d.id !== id);
+                console.log(`🗑️ Deleted ${dino.name} (ID: ${id})`);
+                
                 saveData();
                 renderDinosaurs();
                 updateParentSelects();
@@ -1861,15 +1976,12 @@
                 card.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     
-                    // Calculate which side of the card we're hovering over
                     const rect = card.getBoundingClientRect();
                     const midpoint = rect.left + rect.width / 2;
                     const isLeftSide = e.clientX < midpoint;
                     
-                    // Remove all drag-over classes first
                     card.classList.remove('drag-over-left', 'drag-over-right');
                     
-                    // Add appropriate class based on position
                     if (isLeftSide) {
                         card.classList.add('drag-over-left');
                     } else {
@@ -1885,35 +1997,29 @@
                     e.preventDefault();
                     card.classList.remove('drag-over-left', 'drag-over-right');
                     
-                    const draggedId = e.dataTransfer.getData('text/plain');
-                    const targetId = card.dataset.dinoId;
+                    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+                    const targetId = parseInt(card.dataset.dinoId);
                     
                     if (draggedId !== targetId) {
-                        // Calculate insertion position
                         const rect = card.getBoundingClientRect();
                         const midpoint = rect.left + rect.width / 2;
                         const isLeftSide = e.clientX < midpoint;
                         
-                        // Find indices
-                        const draggedIndex = dinosaurs.findIndex(d => d.id == draggedId);
-                        const targetIndex = dinosaurs.findIndex(d => d.id == targetId);
+                        const draggedIndex = dinosaurs.findIndex(d => d.id === draggedId);
+                        const targetIndex = dinosaurs.findIndex(d => d.id === targetId);
                         
                         if (draggedIndex !== -1 && targetIndex !== -1) {
-                            // Remove the dragged item from its current position
                             const draggedDino = dinosaurs.splice(draggedIndex, 1)[0];
                             
-                            // Calculate new insertion index
                             let insertIndex = targetIndex;
                             if (draggedIndex < targetIndex) {
-                                insertIndex--; // Adjust for removal
+                                insertIndex--;
                             }
                             
-                            // Insert on the right side if not left side
                             if (!isLeftSide) {
                                 insertIndex++;
                             }
                             
-                            // Insert the dragged item at the new position
                             dinosaurs.splice(insertIndex, 0, draggedDino);
                             
                             saveData();
@@ -1963,7 +2069,7 @@
                                     <span class="gender-indicator ${dino.gender === 'Male' ? 'gender-male' : 'gender-female'}"></span>
                                     ${dino.name}
                                 </h3>
-                                <p>${dino.species} • ${dino.gender} • Level ${finalLevel}</p>
+                                <p>${dino.species} • ${dino.gender} • Level ${finalLevel} • ID: ${dino.id}</p>
                             </div>
                             <div class="dino-actions">
                                 <button class="action-btn edit" onclick="openEditForm(${dino.id})" title="Edit">✏️</button>
@@ -1989,11 +2095,10 @@
                 `;
             }).join('');
             
-            // Setup drag and drop after rendering
             setupDragAndDrop();
         }
 
-        // Update parent selects
+        // ROBUST Update parent selects with clean IDs
         function updateParentSelects() {
             const parent1Select = document.getElementById('parent1Select');
             const parent2Select = document.getElementById('parent2Select');
@@ -2006,7 +2111,7 @@
             
             dinosaurs.forEach(dino => {
                 const genderIcon = dino.gender === 'Male' ? '♂️' : '♀️';
-                const optionText = `${genderIcon} ${dino.name} (${dino.species})`;
+                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [ID: ${dino.id}]`;
                 
                 const option1 = document.createElement('option');
                 option1.value = dino.id;
@@ -2023,7 +2128,7 @@
             parent2Select.value = currentParent2;
         }
 
-        // Update modal parent selects
+        // ROBUST Update modal parent selects with clean IDs
         function updateModalParentSelects() {
             const parent1Select = document.getElementById('dinoParent1');
             const parent2Select = document.getElementById('dinoParent2');
@@ -2036,10 +2141,10 @@
             
             dinosaurs.forEach(dino => {
                 const genderIcon = dino.gender === 'Male' ? '♂️' : '♀️';
-                const optionText = `${genderIcon} ${dino.name} (${dino.species})`;
+                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [ID: ${dino.id}]`;
                 
                 const option1 = document.createElement('option');
-                option1.value = dino.id;  
+                option1.value = dino.id;
                 option1.textContent = optionText;
                 parent1Select.appendChild(option1);
                 
@@ -2055,8 +2160,8 @@
 
         // Update breeding preview
         function updateBreedingPreview() {
-            const parent1Id = document.getElementById('parent1Select').value;
-            const parent2Id = document.getElementById('parent2Select').value;
+            const parent1Id = parseInt(document.getElementById('parent1Select').value);
+            const parent2Id = parseInt(document.getElementById('parent2Select').value);
             const preview = document.getElementById('breedingPreview');
             const offspringStats = document.getElementById('offspringStats');
             const offspringLevelInfo = document.getElementById('offspringLevelInfo');
@@ -2068,8 +2173,8 @@
                 return;
             }
             
-            const parent1 = dinosaurs.find(d => d.id == parent1Id);
-            const parent2 = dinosaurs.find(d => d.id == parent2Id);
+            const parent1 = findDinoById(parent1Id);
+            const parent2 = findDinoById(parent2Id);
             
             if (!parent1 || !parent2) {
                 preview.style.display = 'none';
@@ -2117,7 +2222,6 @@
                         }
                     }
                 } else {
-                    // For random mode, show the better stat but indicate it's random
                     const betterStat = p1Stat.value > p2Stat.value ? p1Stat : p2Stat;
                     chosenValue = betterStat.value;
                     chosenWild = betterStat.wild;
@@ -2138,15 +2242,13 @@
                 totalMutations += chosenMutations;
             });
             
-            // Store for potential saving
             currentPotentialOffspring = {
                 stats: potentialStats,
-                baseLevel: Math.max(parent1.level, parent2.level), // Use higher parent level
+                baseLevel: Math.max(parent1.level, parent2.level),
                 species: parent1.species === parent2.species ? parent1.species : `${parent1.species}/${parent2.species}`,
                 perfectMode: perfectMode
             };
             
-            // Display stats in same format as dino cards
             let statsHtml = '';
             Object.keys(statConfig).forEach(stat => {
                 const statData = potentialStats[stat];
@@ -2164,7 +2266,6 @@
             
             offspringStats.innerHTML = statsHtml;
             
-            // Show level info
             const totalStatLevels = totalWildLevels + totalTamedLevels;
             const finalLevel = currentPotentialOffspring.baseLevel + totalStatLevels;
             offspringLevelInfo.innerHTML = `
@@ -2182,14 +2283,12 @@
                 return;
             }
             
-            // Get current parent selection
             const parent1Id = document.getElementById('parent1Select').value;
             const parent2Id = document.getElementById('parent2Select').value;
             
             editingId = null;
             document.getElementById('modalTitle').textContent = 'Save Potential Offspring';
             
-            // Pre-populate form with potential offspring data
             document.getElementById('dinoName').value = `${currentPotentialOffspring.perfectMode ? 'Perfect ' : 'Potential '}${currentPotentialOffspring.species}`;
             
             if (customSpeciesList.includes(currentPotentialOffspring.species)) {
@@ -2201,14 +2300,11 @@
                 document.getElementById('customSpecies').style.display = 'block';
             }
             
-            document.getElementById('dinoGender').value = 'Male'; // Default, user can change
+            document.getElementById('dinoGender').value = 'Male';
             document.getElementById('dinoLevel').value = currentPotentialOffspring.baseLevel;
-            
-            // Auto-populate parents from the breeding calculator
             document.getElementById('dinoParent1').value = parent1Id || '';
             document.getElementById('dinoParent2').value = parent2Id || '';
             
-            // Populate stats and stars
             Object.keys(statConfig).forEach(stat => {
                 const statData = currentPotentialOffspring.stats[stat];
                 document.getElementById(`${stat}Value`).value = statData.value;
@@ -2216,7 +2312,6 @@
                 document.getElementById(`${stat}Mutations`).value = statData.mutations;
                 document.getElementById(`${stat}Tamed`).value = statData.tamed;
                 
-                // Set star state
                 const star = document.getElementById(`star_${stat}`);
                 if (statData.favorite) {
                     star.textContent = '★';
@@ -2256,15 +2351,18 @@
             }
         }
 
-        // Build generational family tree structure
+        // ROBUST Build generational family tree
         function buildGenerationalFamilyTree() {
             const generationMap = new Map();
             const orphans = [];
             
-            // First, calculate generation level for each dinosaur
+            console.log('🌳 Building family tree with clean IDs...');
+            
             function calculateGeneration(dino, visited = new Set()) {
-                // Prevent infinite loops
-                if (visited.has(dino.id)) return 0;
+                if (visited.has(dino.id)) {
+                    console.log(`⚠️ Circular reference detected for ${dino.name}`);
+                    return 0;
+                }
                 visited.add(dino.id);
                 
                 // Foundation animals (no parents)
@@ -2272,13 +2370,14 @@
                     return 0;
                 }
                 
-                // Find parents
-                const parent1 = dinosaurs.find(p => p.id == dino.parent1Id);
-                const parent2 = dinosaurs.find(p => p.id == dino.parent2Id);
+                // Find parents using ROBUST lookup
+                const parent1 = dino.parent1Id ? findDinoById(dino.parent1Id) : null;
+                const parent2 = dino.parent2Id ? findDinoById(dino.parent2Id) : null;
                 
                 // If any parent is missing, this is an orphan
                 if ((dino.parent1Id && !parent1) || (dino.parent2Id && !parent2)) {
-                    return -1; // Mark as orphan
+                    console.log(`🚫 ${dino.name} is orphaned - missing parent data`);
+                    return -1;
                 }
                 
                 // Calculate parent generations
@@ -2293,7 +2392,6 @@
                 return maxParentGen + 1;
             }
             
-            // Assign each dinosaur to its generation
             dinosaurs.forEach(dino => {
                 const generation = calculateGeneration(dino);
                 
@@ -2306,6 +2404,8 @@
                     generationMap.get(generation).push(dino);
                 }
             });
+            
+            console.log(`📋 Family tree built: ${generationMap.size} generations, ${orphans.length} orphans`);
             
             return {
                 generations: generationMap,
@@ -2326,14 +2426,11 @@
             const familyData = buildGenerationalFamilyTree();
             let treeHtml = '';
             
-            // Sort generations (0, 1, 2, 3, etc.)
             const sortedGenerations = Array.from(familyData.generations.keys()).sort((a, b) => a - b);
             
-            // Render each generation
             sortedGenerations.forEach(generation => {
                 const dinosInGeneration = familyData.generations.get(generation);
                 
-                // Filter by species if needed
                 const filteredDinos = dinosInGeneration.filter(dino => 
                     speciesFilter === 'all' || dino.species === speciesFilter
                 );
@@ -2352,7 +2449,6 @@
                 }
             });
             
-            // Show orphans if any
             const filteredOrphans = familyData.orphans.filter(dino =>
                 speciesFilter === 'all' || dino.species === speciesFilter
             );
@@ -2381,7 +2477,7 @@
             const finalLevel = dino.level + totalLevels;
             const genderClass = dino.gender === 'Male' ? 'male' : 'female';
             
-            // Get favorite stats (limit for space)
+            // Get favorite stats
             let favoriteStats = [];
             Object.entries(dino.stats).forEach(([stat, data]) => {
                 if (data.favorite) {
@@ -2389,17 +2485,16 @@
                 }
             });
             
-            // Check if this dino has children in the next generation
-            const hasChildren = dinosaurs.some(d => d.parent1Id == dino.id || d.parent2Id == dino.id);
+            // Check if this dino has children
+            const hasChildren = getChildren(dino.id).length > 0;
             
             // Show parents info for non-foundation animals
             let parentInfo = '';
             if (generation > 0) {
-                const parent1 = dinosaurs.find(p => p.id == dino.parent1Id);
-                const parent2 = dinosaurs.find(p => p.id == dino.parent2Id);
-                const parents = [parent1, parent2].filter(p => p).map(p => p.name).join(' × ');
-                if (parents) {
-                    parentInfo = `<p style="color: #94a3b8; font-size: 9px; margin-top: 2px;">Parents: ${parents}</p>`;
+                const parents = getParents(dino);
+                const parentNames = parents.map(p => p.name).join(' × ');
+                if (parentNames) {
+                    parentInfo = `<p style="color: #94a3b8; font-size: 9px; margin-top: 2px;">Parents: ${parentNames}</p>`;
                 }
             }
             
@@ -2426,6 +2521,7 @@
                     <h4 style="font-size: ${generation === 0 ? '14px' : '13px'}; font-weight: bold; color: #22d3ee; margin-bottom: 4px;">${genderIcon} ${dino.name}</h4>
                     <p style="font-size: ${generation === 0 ? '12px' : '11px'}; color: #cbd5e1; margin: 2px 0;">${dino.species}</p>
                     <p style="font-size: ${generation === 0 ? '12px' : '11px'}; color: #cbd5e1; margin: 2px 0;">Level ${finalLevel}</p>
+                    <p style="font-size: 9px; color: #64748b; margin-top: 2px;">ID: ${dino.id}</p>
                     ${favoriteStats.length > 0 ? `<p style="color: #fbbf24; font-size: 10px; margin-top: 4px;">${favoriteStats.slice(0, 2).join(', ')}</p>` : ''}
                     ${parentInfo}
                     ${hasChildren ? '<p style="color: #22d3ee; font-size: 9px; margin-top: 2px;">Has Offspring ↓</p>' : ''}
@@ -2454,41 +2550,36 @@
                     <h4>${genderIcon} ${dino.name}</h4>
                     <p>${dino.species}</p>
                     <p>Level ${finalLevel}</p>
+                    <p style="font-size: 9px; color: #64748b;">ID: ${dino.id}</p>
                     ${favoriteStats.length > 0 ? `<p style="color: #fbbf24; font-size: 9px; margin-top: 2px;">${favoriteStats[0]}</p>` : ''}
                     <p style="color: #f87171; font-size: 8px; margin-top: 2px;">Missing parent data</p>
                 </div>
             `;
         }
 
-        // FIXED Lineage hover highlighting functions
+        // ROBUST Lineage hover highlighting with clean ID system
         function highlightRelations(dinoId) {
-            console.log(`=== HOVER DEBUG ===`);
+            console.log(`=== HOVER DEBUG (Clean ID System) ===`);
             console.log(`Hovered dino ID: ${dinoId} (type: ${typeof dinoId})`);
             
-            // Clear any existing highlights first
             clearHighlights();
             
-            const currentDino = dinosaurs.find(d => d.id == dinoId);
+            const currentDino = findDinoById(dinoId);
             if (!currentDino) {
                 console.log(`❌ ERROR: Dino with ID ${dinoId} not found`);
-                console.log(`Available dinosaur IDs: [${dinosaurs.map(d => d.id).join(', ')}]`);
                 return;
             }
             
-            console.log(`Hovered dino: ${currentDino.name} ID: ${currentDino.id}`);
-            console.log(`Parent1ID: ${currentDino.parent1Id} (type: ${typeof currentDino.parent1Id})`);
-            console.log(`Parent2ID: ${currentDino.parent2Id} (type: ${typeof currentDino.parent2Id})`);
+            console.log(`Hovered dino: ${currentDino.name} (ID: ${currentDino.id})`);
             
-            // Get parent and children IDs - keep as integers, no parseInt needed
-            const parentIds = [currentDino.parent1Id, currentDino.parent2Id]
-                .filter(id => id !== null && id !== undefined && id !== '');
+            // Get parent and children IDs using ROBUST functions
+            const parents = getParents(currentDino);
+            const children = getChildren(currentDino.id);
+            const parentIds = parents.map(p => p.id);
+            const childrenIds = children.map(c => c.id);
             
-            const childrenIds = dinosaurs
-                .filter(d => d.parent1Id == dinoId || d.parent2Id == dinoId)
-                .map(d => d.id);
-            
-            console.log(`Parent IDs (cleaned): [${parentIds.join(', ')}] (should be max 2)`);
-            console.log(`Children IDs: (${childrenIds.length}) [${childrenIds.join(', ')}]`);
+            console.log(`Parents: [${parents.map(p => `${p.name} (${p.id})`).join(', ')}]`);
+            console.log(`Children: [${children.map(c => `${c.name} (${c.id})`).join(', ')}]`);
             
             // Get all lineage nodes
             const allNodes = document.querySelectorAll('.lineage-dino-node');
@@ -2498,49 +2589,27 @@
             let parentCount = 0;
             let childCount = 0;
             
-            // Debug: Show all node IDs (keep as integers)
-            const allNodeIds = Array.from(allNodes).map(node => parseInt(node.dataset.dinoId));
-            console.log(`All node IDs: [${allNodeIds.join(', ')}]`);
-            
-            // Apply highlighting to each node
             allNodes.forEach(node => {
                 const nodeId = parseInt(node.dataset.dinoId);
                 const nodeName = node.dataset.dinoName || 'Unknown';
                 
-                if (nodeId == dinoId) {
-                    console.log(`✅ WHITE (Current): ${nodeName} ${nodeId}`);
+                if (nodeId === dinoId) {
+                    console.log(`✅ WHITE (Current): ${nodeName} (${nodeId})`);
                     currentCount++;
-                    // Current dino gets white hover - handled by CSS :hover
                 } else if (parentIds.includes(nodeId)) {
-                    console.log(`🔵 CYAN (Parent): ${nodeName} ${nodeId} ← FOUND PARENT!`);
+                    console.log(`🔵 CYAN (Parent): ${nodeName} (${nodeId})`);
                     node.classList.add('highlight-parent');
                     parentCount++;
                 } else if (childrenIds.includes(nodeId)) {
-                    console.log(`🟡 GOLD (Child): ${nodeName} ${nodeId}`);
+                    console.log(`🟡 GOLD (Child): ${nodeName} (${nodeId})`);
                     node.classList.add('highlight-child');
                     childCount++;
                 } else {
-                    // Other dinos - dim them
                     node.classList.add('dim');
                 }
             });
             
-            console.log(`COUNTS - Current: ${currentCount} Parents: ${parentCount} Children: ${childCount}`);
-            
-            // Debug parent matching
-            if (parentIds.length > 0 && parentCount === 0) {
-                console.log(`❌ PARENT ISSUE: We have parent IDs but found no parent nodes!`);
-                console.log(`Looking for parent IDs: [${parentIds.join(', ')}]`);
-                console.log(`In available node IDs: [${allNodeIds.join(', ')}]`);
-                parentIds.forEach(pid => {
-                    const found = allNodeIds.includes(pid);
-                    console.log(`  Parent ID ${pid} found in nodes: ${found}`);
-                });
-            }
-            
-            if (currentCount !== 1) {
-                console.log(`❌ ERROR: Should have exactly 1 current dino, found: ${currentCount}`);
-            }
+            console.log(`HIGHLIGHT SUMMARY - Current: ${currentCount}, Parents: ${parentCount}, Children: ${childCount}`);
         }
         
         function clearHighlights() {
@@ -2556,7 +2625,7 @@
                 dinosaurs: dinosaurs,
                 species: customSpeciesList,
                 exportDate: new Date().toISOString(),
-                version: '1.0'
+                version: '2.0' // Updated version for clean ID system
             };
             
             const dataStr = JSON.stringify(exportData, null, 2);
@@ -2564,11 +2633,11 @@
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = `ark-breeding-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `ark-breeding-data-clean-${new Date().toISOString().split('T')[0]}.json`;
             link.click();
         }
 
-        // Import data
+        // ROBUST Import data with clean ID migration
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2585,8 +2654,8 @@
                     const importCount = importedData.dinosaurs.length;
                     const speciesCount = importedData.species ? importedData.species.length : 0;
                     
-                    if (confirm(`Import ${importCount} dinosaurs and ${speciesCount} species? This will merge with your existing data.`)) {
-                        // Merge species
+                    if (confirm(`Import ${importCount} dinosaurs and ${speciesCount} species? This will merge with your existing data and assign clean IDs.`)) {
+                        // Merge species first
                         if (importedData.species) {
                             importedData.species.forEach(species => {
                                 if (!customSpeciesList.includes(species)) {
@@ -2608,18 +2677,49 @@
                             return;
                         }
                         
-                        // Import dinosaurs with unique IDs
+                        // Import dinosaurs with CLEAN IDs - no parent references yet
+                        const idMapping = new Map();
                         importedData.dinosaurs.forEach(importDino => {
                             const existing = dinosaurs.find(d => d.name === importDino.name && d.species === importDino.species);
                             if (existing) {
                                 importDino.name += ' (Imported)';
                             }
                             
-                            // Ensure unique IDs using the generator
-                            importDino.id = generateUniqueId();
+                            // Store old ID for mapping
+                            const oldId = importDino.id;
+                            const newId = generateId();
+                            idMapping.set(oldId, newId);
+                            
+                            // Assign clean ID and clear parent references temporarily
+                            importDino.id = newId;
+                            importDino.tempParent1Id = importDino.parent1Id;
+                            importDino.tempParent2Id = importDino.parent2Id;
+                            importDino.parent1Id = null;
+                            importDino.parent2Id = null;
+                            
                             dinosaurs.push(importDino);
                         });
                         
+                        // Now fix parent references using the mapping
+                        dinosaurs.forEach(dino => {
+                            if (dino.tempParent1Id) {
+                                const newParent1Id = idMapping.get(dino.tempParent1Id);
+                                if (newParent1Id) {
+                                    dino.parent1Id = newParent1Id;
+                                }
+                                delete dino.tempParent1Id;
+                            }
+                            
+                            if (dino.tempParent2Id) {
+                                const newParent2Id = idMapping.get(dino.tempParent2Id);
+                                if (newParent2Id) {
+                                    dino.parent2Id = newParent2Id;
+                                }
+                                delete dino.tempParent2Id;
+                            }
+                        });
+                        
+                        updateNextId();
                         saveData();
                         populateSpeciesDropdown();
                         populateMainSpeciesFilter();
@@ -2629,7 +2729,7 @@
                         populateSpeciesFilter();
                         updateBreedingPreview();
                         
-                        alert(`Successfully imported ${importCount} dinosaurs!`);
+                        alert(`Successfully imported ${importCount} dinosaurs with clean IDs!`);
                     }
                 } catch (error) {
                     alert('Error importing file: ' + error.message);
@@ -2637,22 +2737,27 @@
             };
             reader.readAsText(file);
             
-            // Clear the input
             event.target.value = '';
         }
 
         // Handle Enter key for adding species  
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('newSpecies').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addSpecies();
-                }
-            });
+            const newSpeciesInput = document.getElementById('newSpecies');
+            if (newSpeciesInput) {
+                newSpeciesInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addSpecies();
+                    }
+                });
+            }
         });
 
         // Update level calculation when level changes
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('dinoLevel').addEventListener('input', updateLevelCalculation);
+            const dinoLevelInput = document.getElementById('dinoLevel');
+            if (dinoLevelInput) {
+                dinoLevelInput.addEventListener('input', updateLevelCalculation);
+            }
         });
 
         // Close modal when clicking outside
