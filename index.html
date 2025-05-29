@@ -1632,12 +1632,17 @@
             const checkbox = document.getElementById('perfectDinoMode');
             const preferences = document.getElementById('statPreferences');
             
+            console.log(`🎯 Perfect Dino Mode toggled: ${checkbox.checked}`);
+            
             if (checkbox.checked) {
                 preferences.style.display = 'grid';
+                console.log('📊 Showing stat preferences');
             } else {
                 preferences.style.display = 'none';
+                console.log('🎲 Hiding stat preferences - Random mode');
             }
             
+            // Immediately update breeding preview to reflect the change
             updateBreedingPreview();
         }
 
@@ -2167,6 +2172,8 @@
             const offspringLevelInfo = document.getElementById('offspringLevelInfo');
             const perfectMode = document.getElementById('perfectDinoMode').checked;
             
+            console.log(`🧬 Breeding Preview: Parent1=${parent1Id}, Parent2=${parent2Id}, Perfect Mode=${perfectMode}`);
+            
             if (!parent1Id || !parent2Id || parent1Id === parent2Id) {
                 preview.style.display = 'none';
                 currentPotentialOffspring = null;
@@ -2182,6 +2189,8 @@
                 return;
             }
             
+            console.log(`🧬 Parents: ${parent1.name} x ${parent2.name}`);
+            
             // Calculate potential offspring stats
             const potentialStats = {};
             let totalWildLevels = 0;
@@ -2192,41 +2201,71 @@
                 const p1Stat = parent1.stats[stat];
                 const p2Stat = parent2.stats[stat];
                 
-                let chosenValue, chosenWild, chosenTamed, chosenMutations;
+                let chosenValue, chosenWild, chosenTamed, chosenMutations, chosenParent;
                 
                 if (perfectMode) {
-                    const preference = document.getElementById(`${stat}Pref`).value;
+                    // Perfect mode - use preferences to choose best stats
+                    const preferenceElement = document.getElementById(`${stat}Pref`);
+                    const preference = preferenceElement ? preferenceElement.value : 'highest';
+                    
+                    console.log(`🎯 ${stat}: P1=${p1Stat.value}, P2=${p2Stat.value}, Preference=${preference}`);
+                    
                     if (preference === 'highest') {
                         if (p1Stat.value > p2Stat.value) {
                             chosenValue = p1Stat.value;
                             chosenWild = p1Stat.wild;
                             chosenTamed = p1Stat.tamed;
                             chosenMutations = p1Stat.mutations;
-                        } else {
+                            chosenParent = parent1.name;
+                        } else if (p2Stat.value > p1Stat.value) {
                             chosenValue = p2Stat.value;
                             chosenWild = p2Stat.wild;
                             chosenTamed = p2Stat.tamed;
                             chosenMutations = p2Stat.mutations;
+                            chosenParent = parent2.name;
+                        } else {
+                            // Equal values - choose parent 1 by default
+                            chosenValue = p1Stat.value;
+                            chosenWild = p1Stat.wild;
+                            chosenTamed = p1Stat.tamed;
+                            chosenMutations = p1Stat.mutations;
+                            chosenParent = parent1.name;
                         }
-                    } else {
+                    } else { // preference === 'lowest'
                         if (p1Stat.value < p2Stat.value) {
                             chosenValue = p1Stat.value;
                             chosenWild = p1Stat.wild;
                             chosenTamed = p1Stat.tamed;
                             chosenMutations = p1Stat.mutations;
-                        } else {
+                            chosenParent = parent1.name;
+                        } else if (p2Stat.value < p1Stat.value) {
                             chosenValue = p2Stat.value;
                             chosenWild = p2Stat.wild;
                             chosenTamed = p2Stat.tamed;
                             chosenMutations = p2Stat.mutations;
+                            chosenParent = parent2.name;
+                        } else {
+                            // Equal values - choose parent 1 by default
+                            chosenValue = p1Stat.value;
+                            chosenWild = p1Stat.wild;
+                            chosenTamed = p1Stat.tamed;
+                            chosenMutations = p1Stat.mutations;
+                            chosenParent = parent1.name;
                         }
                     }
+                    
+                    console.log(`✅ ${stat}: Chose ${chosenValue} from ${chosenParent} (${preference})`);
                 } else {
-                    const betterStat = p1Stat.value > p2Stat.value ? p1Stat : p2Stat;
-                    chosenValue = betterStat.value;
-                    chosenWild = betterStat.wild;
-                    chosenTamed = betterStat.tamed;
-                    chosenMutations = betterStat.mutations;
+                    // Random mode - show both possibilities or random choice
+                    const randomChoice = Math.random() < 0.5;
+                    const chosenStat = randomChoice ? p1Stat : p2Stat;
+                    chosenValue = chosenStat.value;
+                    chosenWild = chosenStat.wild;
+                    chosenTamed = chosenStat.tamed;
+                    chosenMutations = chosenStat.mutations;
+                    chosenParent = randomChoice ? parent1.name : parent2.name;
+                    
+                    console.log(`🎲 ${stat}: Random chose ${chosenValue} from ${chosenParent}`);
                 }
                 
                 potentialStats[stat] = {
@@ -2268,9 +2307,13 @@
             
             const totalStatLevels = totalWildLevels + totalTamedLevels;
             const finalLevel = currentPotentialOffspring.baseLevel + totalStatLevels;
+            const modeText = perfectMode ? 
+                '<br><span style="color: #22d3ee;">🎯 Perfect Dino Mode - Using Preferences</span>' : 
+                '<br><span style="color: #fbbf24;">🎲 Random Inheritance Preview</span>';
+            
             offspringLevelInfo.innerHTML = `
                 Base: ${currentPotentialOffspring.baseLevel} + Stats: ${totalStatLevels} = Total: ${finalLevel}
-                ${perfectMode ? '<br><span style="color: #22d3ee;">Perfect Dino Mode</span>' : '<br><span style="color: #fbbf24;">Random Inheritance</span>'}
+                ${modeText}
             `;
             
             preview.style.display = 'block';
