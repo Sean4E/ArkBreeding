@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARK Breeding Tracker</title>
+    <title>ARK Breeding Tracker - Enhanced</title>
     <style>
         * {
             margin: 0;
@@ -148,7 +148,7 @@
 
         .stat-preferences {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
             padding: 16px;
@@ -178,7 +178,7 @@
             padding: 2px 4px;
             border-radius: 4px;
             font-size: 11px;
-            width: 80px;
+            width: 120px;
         }
 
         .potential-offspring {
@@ -191,40 +191,6 @@
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 15px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .stat-card {
-            background-color: #4b5563;
-            padding: 12px;
-            border-radius: 6px;
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .stat-details {
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        .stat-details div {
-            margin-bottom: 2px;
-        }
-
-        .mutations {
-            color: #fbbf24;
         }
 
         .dino-grid {
@@ -241,25 +207,42 @@
             border: 1px solid #374151;
             cursor: grab;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dino-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .dino-card.foundation::before {
+            background: linear-gradient(180deg, #fbbf24, #f59e0b);
+        }
+
+        .dino-card.male::before {
+            background: linear-gradient(180deg, #22d3ee, #0891b2);
+        }
+
+        .dino-card.female::before {
+            background: linear-gradient(180deg, #f472b6, #ec4899);
+        }
+
+        .dino-card-content {
+            position: relative;
+            z-index: 2;
+            padding-left: 12px;
         }
 
         .dino-card:hover {
             border-color: #22d3ee;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(34, 211, 238, 0.15);
-        }
-
-        .dino-card.dragging {
-            opacity: 0.5;
-            cursor: grabbing;
-        }
-
-        .dino-card.drag-over-left {
-            border-left: 4px solid #22d3ee;
-        }
-
-        .dino-card.drag-over-right {
-            border-right: 4px solid #22d3ee;
         }
 
         .dino-header {
@@ -283,6 +266,20 @@
             gap: 8px;
         }
 
+        .generation-badge {
+            background-color: #374151;
+            color: #fbbf24;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .generation-badge.foundation {
+            background-color: #fbbf24;
+            color: #0f172a;
+        }
+
         .gender-indicator {
             width: 12px;
             height: 12px;
@@ -301,6 +298,14 @@
         .dino-info p {
             font-size: 13px;
             color: #cbd5e1;
+        }
+
+        /* New parent info styling */
+        .parent-info {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+            font-style: italic;
         }
 
         .dino-actions {
@@ -337,20 +342,21 @@
         .dino-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 4px;
         }
 
         .dino-stat {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             font-size: 13px;
+            min-height: 20px;
         }
 
         .dino-stat-value {
             font-weight: 500;
-            min-width: 50px;
-            font-size: 14px;
+            min-width: 45px;
+            font-size: 13px;
             color: white;
         }
 
@@ -361,13 +367,31 @@
 
         .dino-stat-levels {
             color: #94a3b8;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
+            margin-right: 2px;
         }
 
         .dino-stat-levels.favorite {
             color: #fbbf24;
             font-weight: bold;
+        }
+
+        /* Enhanced inheritance indicator styling for better single-row fit */
+        .inheritance-indicator {
+            font-size: 10px;
+            line-height: 1;
+            margin-left: 2px;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+
+        .inheritance-indicator.from-male {
+            color: #60a5fa;
+        }
+
+        .inheritance-indicator.from-female {
+            color: #f472b6;
         }
 
         .level-info {
@@ -468,12 +492,23 @@
             margin-bottom: 20px;
         }
 
+        /* Enhanced stat form row with inline parent selection */
         .stat-form-row {
             display: grid;
-            grid-template-columns: 120px repeat(4, 60px) 80px 30px;
+            grid-template-columns: 120px repeat(4, 60px) 200px 30px 30px;
             gap: 12px;
-            align-items: end;
+            align-items: center;
             margin-bottom: 15px;
+            padding: 8px;
+            background-color: #2d3748;
+            border-radius: 6px;
+            border: 1px solid #4b5563;
+            transition: all 0.2s;
+        }
+
+        .stat-form-row.dna-linked {
+            border-color: #22d3ee;
+            background-color: rgba(34, 211, 238, 0.05);
         }
 
         .stat-form-label {
@@ -496,10 +531,99 @@
             width: 100%;
         }
 
-        .level-display {
+        .stat-form-group input:read-only {
+            background-color: #374151;
+            color: #94a3b8;
+            border-color: #4b5563;
+        }
+
+        /* Enhanced inheritance controls section */
+        .inheritance-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 180px;
+        }
+
+        .inheritance-controls.hidden {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .parent-selector {
+            flex: 1;
+        }
+
+        .parent-select {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 4px 6px;
+            border-radius: 4px;
             font-size: 11px;
+            width: 100%;
+        }
+
+        .parent-gender-toggle {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background-color: #4b5563;
+            border-radius: 4px;
+            padding: 2px;
+            border: 1px solid #6b7280;
+        }
+
+        .gender-option {
+            padding: 2px 4px;
+            font-size: 10px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .gender-option.active {
+            background-color: #22d3ee;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        .gender-option.male {
+            color: #60a5fa;
+        }
+
+        .gender-option.female {
+            color: #f472b6;
+        }
+
+        .dna-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: #4b5563;
+            transition: all 0.2s;
+            user-select: none;
+            width: 24px;
+            height: 24px;
+            outline: none;
+            border: none;
+            background: none;
+            border-radius: 4px;
+        }
+
+        .dna-toggle:hover {
+            background-color: #374151;
+        }
+
+        .dna-toggle.linked {
             color: #22d3ee;
-            text-align: center;
+        }
+
+        .dna-toggle.manual {
+            color: #94a3b8;
         }
 
         .star-favorite {
@@ -514,6 +638,10 @@
         }
 
         .star-favorite:hover {
+            color: #fbbf24;
+        }
+
+        .star-favorite.active {
             color: #fbbf24;
         }
 
@@ -585,14 +713,7 @@
             display: inline-block;
             vertical-align: middle;
             filter: brightness(0) invert(1);
-        }
-
-        .stat-icon-large {
-            width: 20px;
-            height: 20px;
-            display: inline-block;
-            vertical-align: middle;
-            filter: brightness(0) invert(1);
+            flex-shrink: 0;
         }
 
         .stat-icon-small {
@@ -890,113 +1011,517 @@
         .melee { color: #fb923c; }
         .speed { color: #22d3ee; }
 
-        /* Migration notification */
-        .migration-notice {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #1e293b;
-            border: 2px solid #22d3ee;
-            border-radius: 8px;
-            padding: 20px;
-            z-index: 1002;
-            max-width: 500px;
-            text-align: center;
+        /* Mutation Planner Styles */
+        .mutation-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2d3748;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
-        .migration-notice.hidden {
-            display: none;
+        .mutation-table th {
+            background-color: #1e293b;
+            color: #22d3ee;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 2px solid #22d3ee;
+        }
+
+        .mutation-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #4b5563;
+            font-size: 13px;
+        }
+
+        .mutation-table tr:hover {
+            background-color: rgba(34, 211, 238, 0.1);
+        }
+
+        .mutation-table .generation-cell {
+            font-weight: bold;
+            color: #22d3ee;
+            text-align: center;
+            width: 80px;
+        }
+
+        .mutation-table .level-cell {
+            font-weight: bold;
+            color: #fbbf24;
+            text-align: center;
+            width: 80px;
+        }
+
+        .mutation-table .stat-cell {
+            font-weight: bold;
+            text-align: center;
+            width: 100px;
+        }
+
+        .mutation-table .difference-cell {
+            color: #34d399;
+            font-weight: bold;
+            text-align: center;
+            width: 80px;
+        }
+
+        .baseline-pair-display {
+            background-color: #2d3748;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #4b5563;
+        }
+
+        .baseline-pair-display h4 {
+            color: #22d3ee;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .baseline-pair-display .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .baseline-pair-display .stat-summary {
+            text-align: center;
+            padding: 4px;
+            background-color: #374151;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .baseline-pair-display .stat-summary .stat-name {
+            color: #94a3b8;
+            font-size: 10px;
+        }
+
+        .baseline-pair-display .stat-summary .stat-value {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Mobile Experience Enhancements */
+        .mobile-friendly-btn {
+            min-height: 44px;
+            min-width: 44px;
+            padding: 12px 20px;
+        }
+
+        .searchable-dropdown-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .searchable-dropdown-input {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            font-size: 14px;
+            border-bottom: none;
+        }
+
+        .searchable-dropdown-select {
+            width: 100%;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 0 0 6px 6px;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+
+        .notification {
+            background-color: #1e293b;
+            border-left: 4px solid #22d3ee;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .notification.warning {
+            border-left-color: #fbbf24;
+        }
+
+        .notification.success {
+            border-left-color: #34d399;
+        }
+
+        .notification.info {
+            border-left-color: #60a5fa;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            color: #22d3ee;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .notification-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .notification-btn {
+            background-color: #374151;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .notification-btn:hover {
+            background-color: #4b5563;
+        }
+
+        .notification-btn.primary {
+            background-color: #0891b2;
+        }
+
+        .notification-btn.primary:hover {
+            background-color: #0e7490;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @media (max-width: 768px) {
-            .parent-selects {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stat-form-row {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .dino-stats {
-                grid-template-columns: 1fr;
+            .container {
+                padding: 10px;
             }
 
-            .stats-grid {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .btn, .btn-small {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .action-btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            .dino-actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .modal-content {
+                margin: 10px;
+                padding: 20px;
+                max-height: 95vh;
+            }
+
+            .form-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .parent-selects {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
 
             .breeding-controls {
                 flex-direction: column;
-                align-items: flex-start;
+                gap: 12px;
+                align-items: stretch;
             }
 
             .stat-preferences {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
             }
 
-            .parents-container {
+            .stat-form-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .inheritance-controls {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
+                min-width: auto;
+                width: 100%;
             }
 
-            .parent-connection {
-                width: 2px;
-                height: 20px;
-                top: 100%;
-                left: 50%;
-                transform: translateX(-50%);
+            .parent-selector {
+                width: 100%;
             }
 
-            .children-container {
+            .mutation-table {
+                font-size: 11px;
+            }
+
+            .mutation-table th,
+            .mutation-table td {
+                padding: 6px 4px;
+            }
+
+            .notification-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .notification {
+                padding: 12px;
+            }
+
+            .import-export-actions {
                 flex-direction: column;
-                gap: 10px;
-            }
-
-            .generation-label {
-                position: static;
-                writing-mode: initial;
-                margin-bottom: 10px;
-                text-align: center;
+                gap: 8px;
             }
 
             .lineage-controls {
                 flex-direction: column;
-                gap: 8px;
-                align-items: flex-start;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .lineage-filter {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .dino-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .dino-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-preferences {
+                grid-template-columns: 1fr;
+            }
+
+            .mutation-table th,
+            .mutation-table td {
+                padding: 4px 2px;
+                font-size: 10px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Migration Notice -->
-        <div id="migrationNotice" class="migration-notice hidden">
-            <h3 style="color: #22d3ee; margin-bottom: 10px;">🔄 Data Migration Available</h3>
-            <p style="margin-bottom: 15px;">We found existing dinosaur data with old ID format. Click below to migrate to the new clean ID system.</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn" onclick="performMigration()">✅ Migrate Data</button>
-                <button class="btn-secondary" onclick="hideMigrationNotice()">Skip</button>
-            </div>
-        </div>
-
         <div class="header">
-            <h1 class="title">ARK Breeding Tracker</h1>
+            <h1 class="title">ARK Breeding Tracker - Enhanced</h1>
             <div class="header-actions">
                 <div class="import-export-section">
                     <div class="import-export-actions">
-                        <button class="btn btn-outline btn-small" onclick="exportData()">📤 Export</button>
-                        <button class="btn btn-outline btn-small" onclick="document.getElementById('importFile').click()">📥 Import</button>
+                        <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="exportData()">📤 Export</button>
+                        <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
                         <input type="file" id="importFile" class="file-input" accept=".json" onchange="importData(event)">
-                        <button class="btn btn-small" onclick="toggleLineageTree()">🌳 Lineage</button>
+                        <button class="btn btn-small mobile-friendly-btn" onclick="toggleLineageTree()">🌳 Lineage</button>
+                        <button class="btn btn-small mobile-friendly-btn" onclick="toggleMutationPlanner()">🧬 Mutation Planner</button>
                     </div>
                 </div>
-                <button class="btn" onclick="openAddForm()">+ Add Dinosaur</button>
+                <button class="btn mobile-friendly-btn" onclick="openAddForm()">+ Add Dinosaur</button>
+            </div>
+        </div>
+
+        <div id="lineageSection" class="lineage-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="breeding-title">Family Lineage Tree</h2>
+                <button class="btn btn-small mobile-friendly-btn" onclick="toggleLineageTree()">✕ Close</button>
+            </div>
+            <div class="lineage-controls">
+                <select id="speciesFilter" class="lineage-filter" onchange="renderLineageTree()">
+                    <option value="all">All Species</option>
+                </select>
+                <div style="color: #94a3b8; font-size: 12px; margin-left: 12px;">
+                    Blue borders = ♂️ Male • Pink borders = ♀️ Female • Golden stats = Favorites<br>
+                    <span style="color: #22d3ee;">💡 Hover any dino: </span>
+                    <span style="color: #22d3ee;">Cyan = Their Parents</span> • 
+                    <span style="color: #fbbf24;">Gold = Their Children</span> • 
+                    <span style="color: #ffffff;">White = You're hovering</span>
+                </div>
+            </div>
+            <div id="lineageTree" class="lineage-tree"></div>
+        </div>
+
+        <div id="mutationSection" class="breeding-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="breeding-title">🧬 Mutation Planner</h2>
+                <button class="btn btn-small mobile-friendly-btn" onclick="toggleMutationPlanner()">✕ Close</button>
+            </div>
+            
+            <div class="breeding-controls">
+                <div class="select-group" style="min-width: 200px;">
+                    <label>Perfect Female</label>
+                    <div class="searchable-dropdown-container">
+                        <input type="text" id="perfectFemaleSearch" class="searchable-dropdown-input" placeholder="Search for female..." oninput="filterPerfectParentOptions('perfectFemale')">
+                        <select id="perfectFemale" class="searchable-dropdown-select" onchange="updateMutationPlan()">
+                            <option value="">Select Perfect Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="select-group" style="min-width: 200px;">
+                    <label>Perfect Male</label>
+                    <div class="searchable-dropdown-container">
+                        <input type="text" id="perfectMaleSearch" class="searchable-dropdown-input" placeholder="Search for male..." oninput="filterPerfectParentOptions('perfectMale')">
+                        <select id="perfectMale" class="searchable-dropdown-select" onchange="updateMutationPlan()">
+                            <option value="">Select Perfect Male</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="select-group" style="min-width: 120px;">
+                    <label>Generations</label>
+                    <input type="number" id="maxGenerations" value="20" min="1" max="100" onchange="updateMutationPlan()" style="background-color: #374151; border: 1px solid #4b5563; color: white; padding: 8px 12px; border-radius: 6px; font-size: 14px;">
+                </div>
+                <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="exportMutationPlan()">📤 Export Plan</button>
+                <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="document.getElementById('importPlanFile').click()">📥 Import Plan</button>
+                <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="clearMutationPlan()">🗑️ Clear Plan</button>
+                <input type="file" id="importPlanFile" class="file-input" accept=".json" onchange="importMutationPlan(event)">
+            </div>
+
+            <div class="stat-preferences" style="margin-bottom: 20px;">
+                <div style="grid-column: 1 / -1; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #22d3ee;">
+                    Select Stats to Mutate:
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label health">
+                        <img src="images/health.webp" alt="Health" class="stat-icon-small">
+                        <span>Health</span>
+                    </div>
+                    <input type="checkbox" id="healthMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label stamina">
+                        <img src="images/stamina.webp" alt="Stamina" class="stat-icon-small">
+                        <span>Stamina</span>
+                    </div>
+                    <input type="checkbox" id="staminaMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label oxygen">
+                        <img src="images/oxygen.webp" alt="Oxygen" class="stat-icon-small">
+                        <span>Oxygen</span>
+                    </div>
+                    <input type="checkbox" id="oxygenMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label food">
+                        <img src="images/food.webp" alt="Food" class="stat-icon-small">
+                        <span>Food</span>
+                    </div>
+                    <input type="checkbox" id="foodMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label weight">
+                        <img src="images/weight.webp" alt="Weight" class="stat-icon-small">
+                        <span>Weight</span>
+                    </div>
+                    <input type="checkbox" id="weightMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label melee">
+                        <img src="images/melee.webp" alt="Melee" class="stat-icon-small">
+                        <span>Melee</span>
+                    </div>
+                    <input type="checkbox" id="meleeMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+                <div class="stat-preference">
+                    <div class="stat-preference-label speed">
+                        <img src="images/speed.webp" alt="Speed" class="stat-icon-small">
+                        <span>Speed</span>
+                    </div>
+                    <input type="checkbox" id="speedMutation" onchange="updateMutationPlan()" style="width: 18px; height: 18px;">
+                </div>
+            </div>
+
+            <div id="mutationPlanDisplay" style="display: none;">
+                <div style="background-color: #374151; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #22d3ee; margin-bottom: 12px;">Baseline Perfect Pair</h3>
+                    <div id="baselinePair" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;"></div>
+                </div>
+
+                <div style="background-color: #374151; padding: 16px; border-radius: 8px;">
+                    <h3 style="color: #22d3ee; margin-bottom: 12px;">Mutation Progression</h3>
+                    <div style="margin-bottom: 16px; padding: 12px; background-color: #2d3748; border-radius: 6px; border-left: 4px solid #22d3ee;">
+                        <p style="color: #22d3ee; font-weight: bold; margin-bottom: 4px;">Strategy: Keep Perfect Female + Replace Male</p>
+                        <p style="color: #cbd5e1; font-size: 13px;">Each generation adds +2 levels to selected stats. Keep breeding until you get the mutation, then use that offspring as the new male.</p>
+                        <p style="color: #fbbf24; font-size: 12px; margin-top: 8px;">⚠️ Multiple stat mutations are extremely rare - expect many attempts per generation!</p>
+                    </div>
+                    <div id="mutationProgressionTable" style="max-height: 500px; overflow-y: auto; overflow-x: auto;"></div>
+                </div>
             </div>
         </div>
 
@@ -1021,7 +1546,7 @@
                     <input type="checkbox" id="favoritesOnlyFilter" onchange="applyFilters()">
                     <label for="favoritesOnlyFilter">Show Only Favorites</label>
                 </div>
-                <button class="btn btn-outline btn-small" onclick="clearAllFilters()">🔄 Clear Filters</button>
+                <button class="btn btn-outline btn-small mobile-friendly-btn" onclick="clearAllFilters()">🔄 Clear Filters</button>
             </div>
             
             <div class="stat-preferences" style="margin-bottom: 0;">
@@ -1080,26 +1605,6 @@
             </div>
         </div>
 
-        <div id="lineageSection" class="lineage-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 class="breeding-title">Family Lineage Tree</h2>
-                <button class="btn btn-small" onclick="toggleLineageTree()">✕ Close</button>
-            </div>
-            <div class="lineage-controls">
-                <select id="speciesFilter" class="lineage-filter" onchange="renderLineageTree()">
-                    <option value="all">All Species</option>
-                </select>
-                <div style="color: #94a3b8; font-size: 12px; margin-left: 12px;">
-                    Blue borders = ♂️ Male • Pink borders = ♀️ Female • Golden stats = Favorites<br>
-                    <span style="color: #22d3ee;">💡 Hover any dino: </span>
-                    <span style="color: #22d3ee;">Cyan = Their Parents</span> • 
-                    <span style="color: #fbbf24;">Gold = Their Children</span> • 
-                    <span style="color: #ffffff;">White = You're hovering</span>
-                </div>
-            </div>
-            <div id="lineageTree" class="lineage-tree"></div>
-        </div>
-
         <div class="breeding-section">
             <h2 class="breeding-title">Breeding Calculator</h2>
             <div class="breeding-controls">
@@ -1116,8 +1621,10 @@
                         <span>Health</span>
                     </div>
                     <select id="healthPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1126,8 +1633,10 @@
                         <span>Stamina</span>
                     </div>
                     <select id="staminaPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1136,8 +1645,10 @@
                         <span>Oxygen</span>
                     </div>
                     <select id="oxygenPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1146,8 +1657,10 @@
                         <span>Food</span>
                     </div>
                     <select id="foodPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1156,8 +1669,10 @@
                         <span>Weight</span>
                     </div>
                     <select id="weightPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1166,8 +1681,10 @@
                         <span>Melee</span>
                     </div>
                     <select id="meleePref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
                 <div class="stat-preference">
@@ -1176,8 +1693,10 @@
                         <span>Speed</span>
                     </div>
                     <select id="speedPref">
-                        <option value="highest">Highest</option>
-                        <option value="lowest">Lowest</option>
+                        <option value="parent1">From Parent 1</option>
+                        <option value="parent2">From Parent 2</option>
+                        <option value="highest">Highest Value</option>
+                        <option value="lowest">Lowest Value</option>
                     </select>
                 </div>
             </div>
@@ -1185,15 +1704,21 @@
             <div class="parent-selects">
                 <div class="select-group">
                     <label>Parent 1</label>
-                    <select id="parent1Select" onchange="updateBreedingPreview()">
-                        <option value="">Select Parent 1</option>
-                    </select>
+                    <div class="searchable-dropdown-container">
+                        <input type="text" id="parent1Search" class="searchable-dropdown-input" placeholder="Search for parent 1..." oninput="filterParentOptions('parent1')">
+                        <select id="parent1Select" class="searchable-dropdown-select" onchange="updateBreedingPreview()">
+                            <option value="">Select Parent 1</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="select-group">
                     <label>Parent 2</label>
-                    <select id="parent2Select" onchange="updateBreedingPreview()">
-                        <option value="">Select Parent 2</option>
-                    </select>
+                    <div class="searchable-dropdown-container">
+                        <input type="text" id="parent2Search" class="searchable-dropdown-input" placeholder="Search for parent 2..." oninput="filterParentOptions('parent2')">
+                        <select id="parent2Select" class="searchable-dropdown-select" onchange="updateBreedingPreview()">
+                            <option value="">Select Parent 2</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div id="breedingPreview" class="potential-offspring" style="display: none;">
@@ -1213,6 +1738,9 @@
             <p style="color: #64748b;">Click "Add Dinosaur" to start tracking your breeding lines</p>
         </div>
     </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
 
     <!-- Modal -->
     <div id="modal" class="modal hidden">
@@ -1253,17 +1781,17 @@
                 </div>
                 <div class="form-group">
                     <label>Level</label>
-                    <input type="number" id="dinoLevel" value="1" min="1" onfocus="this.select()">
+                    <input type="number" id="dinoLevel" value="1" min="1" onfocus="this.select()" oninput="updateLevelCalculation()">
                 </div>
                 <div class="form-group">
                     <label>Parent 1 (Optional)</label>
-                    <select id="dinoParent1">
+                    <select id="dinoParent1" onchange="updateModalParentSelection()">
                         <option value="">No Parent</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Parent 2 (Optional)</label>
-                    <select id="dinoParent2">
+                    <select id="dinoParent2" onchange="updateModalParentSelection()">
                         <option value="">No Parent</option>
                     </select>
                 </div>
@@ -1271,6 +1799,11 @@
 
             <div class="stats-section">
                 <h3>Stats</h3>
+                
+                <div id="totalLevelDisplay" style="background-color: #374151; padding: 8px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: bold; color: #22d3ee;">
+                    Base: 1 + Stats: 0 = Total: 1
+                </div>
+                
                 <div id="statsForm"></div>
             </div>
 
@@ -1283,135 +1816,669 @@
 
     <script>
         // ===============================================
-        // CLEAN SLATE ID SYSTEM - ROBUST & BULLETPROOF
+        // SEARCHABLE DROPDOWN ENHANCEMENTS
+        // ===============================================
+
+        function filterParentOptions(parentType) {
+            const searchInput = document.getElementById(`${parentType}Search`);
+            const select = document.getElementById(`${parentType}Select`);
+            
+            if (!searchInput || !select) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block';
+                    return;
+                }
+                
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Auto-select if only one match (excluding empty option)
+            const visibleOptions = Array.from(options).filter(option => 
+                option.value !== '' && option.style.display !== 'none'
+            );
+            
+            if (visibleOptions.length === 1 && searchTerm.length > 2) {
+                select.value = visibleOptions[0].value;
+                updateBreedingPreview();
+            }
+        }
+
+        function filterPerfectParentOptions(parentType) {
+            const searchInput = document.getElementById(`${parentType}Search`);
+            const select = document.getElementById(parentType);
+            
+            if (!searchInput || !select) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block';
+                    return;
+                }
+                
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Auto-select if only one match (excluding empty option)
+            const visibleOptions = Array.from(options).filter(option => 
+                option.value !== '' && option.style.display !== 'none'
+            );
+            
+            if (visibleOptions.length === 1 && searchTerm.length > 2) {
+                select.value = visibleOptions[0].value;
+                updateMutationPlan();
+            }
+        }
+
+        // ===============================================
+        // SMART NOTIFICATIONS SYSTEM
+        // ===============================================
+
+        let notificationId = 0;
+        let lastBackupReminder = localStorage.getItem('lastBackupReminder') || '0';
+
+        function showNotification(title, message, type = 'info', actions = null, duration = 5000) {
+            const container = document.getElementById('notificationContainer');
+            if (!container) return;
+            
+            const id = ++notificationId;
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.id = `notification-${id}`;
+            
+            let actionsHtml = '';
+            if (actions && actions.length > 0) {
+                actionsHtml = `
+                    <div class="notification-actions">
+                        ${actions.map(action => 
+                            `<button class="notification-btn ${action.primary ? 'primary' : ''}" onclick="${action.onclick}">${action.text}</button>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+            
+            notification.innerHTML = `
+                <button class="notification-close" onclick="closeNotification(${id})">&times;</button>
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+                ${actionsHtml}
+            `;
+            
+            container.appendChild(notification);
+            
+            if (duration > 0) {
+                setTimeout(() => closeNotification(id), duration);
+            }
+            
+            return id;
+        }
+
+        function closeNotification(id) {
+            const notification = document.getElementById(`notification-${id}`);
+            if (notification) {
+                notification.remove();
+            }
+        }
+
+        function checkForDuplicates(newDino) {
+            const potentialDuplicates = dinosaurs.filter(existing => {
+                // Check for very similar dinos
+                if (existing.species !== newDino.species) return false;
+                if (existing.gender !== newDino.gender) return false;
+                
+                // Check if levels are very close (within 5 levels)
+                const existingLevel = existing.level + calculateTotalLevels(existing.stats);
+                const newLevel = newDino.level + calculateTotalLevels(newDino.stats);
+                if (Math.abs(existingLevel - newLevel) > 5) return false;
+                
+                // Check if stats are similar (at least 5 out of 7 stats within 20% of each other)
+                let similarStats = 0;
+                Object.keys(statConfig).forEach(stat => {
+                    const existingValue = calculateStatValue(existing, stat);
+                    const newValue = calculateStatValue(newDino, stat);
+                    const difference = Math.abs(existingValue - newValue) / Math.max(existingValue, newValue);
+                    if (difference < 0.2) similarStats++;
+                });
+                
+                return similarStats >= 5;
+            });
+            
+            if (potentialDuplicates.length > 0) {
+                const duplicate = potentialDuplicates[0];
+                showNotification(
+                    '🔍 Potential Duplicate Detected',
+                    `This ${newDino.species} looks very similar to "${duplicate.name}" (Level ${duplicate.level + calculateTotalLevels(duplicate.stats)}). Consider checking if it's the same dino.`,
+                    'warning',
+                    [
+                        {
+                            text: 'View Similar',
+                            onclick: `openEditForm(${duplicate.id}); closeNotification(${notificationId})`,
+                            primary: true
+                        },
+                        {
+                            text: 'Continue Anyway',
+                            onclick: `closeNotification(${notificationId})`
+                        }
+                    ],
+                    10000
+                );
+            }
+        }
+
+        function checkBreedingRecommendations() {
+            const parent1Id = parseInt(document.getElementById('parent1Select').value);
+            const parent2Id = parseInt(document.getElementById('parent2Select').value);
+            
+            if (!parent1Id || !parent2Id || parent1Id === parent2Id) return;
+            
+            const parent1 = findDinoById(parent1Id);
+            const parent2 = findDinoById(parent2Id);
+            
+            if (!parent1 || !parent2) return;
+            
+            let recommendations = [];
+            
+            // Check species compatibility
+            if (parent1.species !== parent2.species) {
+                recommendations.push('⚠️ Different species - offspring may not be viable in ARK');
+            }
+            
+            // Check level disparity
+            const level1 = parent1.level + calculateTotalLevels(parent1.stats);
+            const level2 = parent2.level + calculateTotalLevels(parent2.stats);
+            const levelDiff = Math.abs(level1 - level2);
+            
+            if (levelDiff > 50) {
+                recommendations.push(`📊 Large level difference (${levelDiff} levels) - consider more balanced pairing`);
+            }
+            
+            // Check for complementary stats
+            let complementaryStats = [];
+            Object.keys(statConfig).forEach(stat => {
+                const p1Value = calculateStatValue(parent1, stat);
+                const p2Value = calculateStatValue(parent2, stat);
+                const p1Favorite = parent1.stats[stat].favorite;
+                const p2Favorite = parent2.stats[stat].favorite;
+                
+                if (p1Favorite && p2Favorite) {
+                    complementaryStats.push(statConfig[stat].name);
+                }
+            });
+            
+            if (complementaryStats.length >= 3) {
+                recommendations.push(`✨ Excellent pairing! Both parents have favorite ${complementaryStats.slice(0, 3).join(', ')} stats`);
+            }
+            
+            if (recommendations.length > 0) {
+                showNotification(
+                    '🧬 Breeding Analysis',
+                    recommendations.join('\n\n'),
+                    recommendations.some(r => r.includes('⚠️')) ? 'warning' : 'info',
+                    null,
+                    8000
+                );
+            }
+        }
+
+        function checkBackupReminder() {
+            const now = Date.now();
+            const lastReminder = parseInt(lastBackupReminder);
+            const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+            
+            if (now - lastReminder > thirtyDays && dinosaurs.length >= 10) {
+                showNotification(
+                    '💾 Backup Reminder',
+                    `You have ${dinosaurs.length} dinos! Consider exporting your data as a backup to prevent data loss.`,
+                    'info',
+                    [
+                        {
+                            text: 'Export Now',
+                            onclick: `exportData(); localStorage.setItem('lastBackupReminder', '${now}'); closeNotification(${notificationId})`,
+                            primary: true
+                        },
+                        {
+                            text: 'Remind Later',
+                            onclick: `localStorage.setItem('lastBackupReminder', '${now - (thirtyDays - 7 * 24 * 60 * 60 * 1000)}'); closeNotification(${notificationId})`
+                        }
+                    ],
+                    0 // Don't auto-close
+                );
+                
+                localStorage.setItem('lastBackupReminder', now.toString());
+            }
+        }
+
+        // ===============================================
+        // MUTATION PLANNER FUNCTIONS
+        // ===============================================
+
+        function toggleMutationPlanner() {
+            const section = document.getElementById('mutationSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                populatePerfectParentSelects();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function populatePerfectParentSelects() {
+            const femaleSelect = document.getElementById('perfectFemale');
+            const maleSelect = document.getElementById('perfectMale');
+            
+            if (!femaleSelect || !maleSelect) return;
+            
+            // Clear existing options
+            femaleSelect.innerHTML = '<option value="">Select Perfect Female</option>';
+            maleSelect.innerHTML = '<option value="">Select Perfect Male</option>';
+            
+            // Filter and populate
+            const females = dinosaurs.filter(d => d.gender === 'Female');
+            const males = dinosaurs.filter(d => d.gender === 'Male');
+            
+            females.forEach(dino => {
+                const totalLevels = calculateTotalLevels(dino.stats);
+                const finalLevel = dino.level + totalLevels;
+                const generation = getGeneration(dino);
+                const genBadge = isFoundation(dino) ? 'F' : `G${generation}`;
+                
+                const option = document.createElement('option');
+                option.value = dino.id;
+                option.textContent = `♀️ ${dino.name} (${dino.species}) [Lv.${finalLevel}] [${genBadge}]`;
+                femaleSelect.appendChild(option);
+            });
+            
+            males.forEach(dino => {
+                const totalLevels = calculateTotalLevels(dino.stats);
+                const finalLevel = dino.level + totalLevels;
+                const generation = getGeneration(dino);
+                const genBadge = isFoundation(dino) ? 'F' : `G${generation}`;
+                
+                const option = document.createElement('option');
+                option.value = dino.id;
+                option.textContent = `♂️ ${dino.name} (${dino.species}) [Lv.${finalLevel}] [${genBadge}]`;
+                maleSelect.appendChild(option);
+            });
+        }
+
+        function updateMutationPlan() {
+            const femaleId = parseInt(document.getElementById('perfectFemale').value);
+            const maleId = parseInt(document.getElementById('perfectMale').value);
+            const maxGenerations = parseInt(document.getElementById('maxGenerations').value) || 20;
+            
+            // Get selected mutation stats
+            const selectedStats = [];
+            Object.keys(statConfig).forEach(stat => {
+                const checkbox = document.getElementById(`${stat}Mutation`);
+                if (checkbox && checkbox.checked) {
+                    selectedStats.push(stat);
+                }
+            });
+            
+            const planDisplay = document.getElementById('mutationPlanDisplay');
+            
+            if (!femaleId || !maleId || selectedStats.length === 0) {
+                planDisplay.style.display = 'none';
+                return;
+            }
+            
+            const female = findDinoById(femaleId);
+            const male = findDinoById(maleId);
+            
+            if (!female || !male) {
+                planDisplay.style.display = 'none';
+                return;
+            }
+            
+            // Check if they're the same species
+            if (female.species !== male.species) {
+                alert('Warning: Selected dinos are different species. This may not produce viable offspring in ARK.');
+            }
+            
+            displayBaselinePair(female, male, selectedStats);
+            generateMutationProgression(female, male, selectedStats, maxGenerations);
+            
+            planDisplay.style.display = 'block';
+        }
+
+        function displayBaselinePair(female, male, selectedStats) {
+            const container = document.getElementById('baselinePair');
+            if (!container) return;
+            
+            const femaleTotalLevels = calculateTotalLevels(female.stats);
+            const maleTotalLevels = calculateTotalLevels(male.stats);
+            const femaleFinalLevel = female.level + femaleTotalLevels;
+            const maleFinalLevel = male.level + maleTotalLevels;
+            
+            container.innerHTML = `
+                <div class="baseline-pair-display">
+                    <h4>♀️ ${female.name} - Level ${femaleFinalLevel}</h4>
+                    <p style="color: #cbd5e1; font-size: 13px;">${female.species} • Generation ${getGeneration(female)}</p>
+                    <div class="stats-summary">
+                        ${Object.entries(statConfig).map(([stat, config]) => {
+                            const statData = female.stats[stat];
+                            const actualValue = calculateStatValue(female, stat);
+                            const isTarget = selectedStats.includes(stat);
+                            return `
+                                <div class="stat-summary ${isTarget ? 'target-stat' : ''}" style="${isTarget ? 'border: 2px solid #22d3ee;' : ''}">
+                                    <div class="stat-name">${config.name}</div>
+                                    <div class="stat-value">${formatStatValue(actualValue, stat)}</div>
+                                    <div style="font-size: 10px; color: #94a3b8;">(${statData.wild}-${statData.mutations}-${statData.tamed})</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                <div class="baseline-pair-display">
+                    <h4>♂️ ${male.name} - Level ${maleFinalLevel}</h4>
+                    <p style="color: #cbd5e1; font-size: 13px;">${male.species} • Generation ${getGeneration(male)}</p>
+                    <div class="stats-summary">
+                        ${Object.entries(statConfig).map(([stat, config]) => {
+                            const statData = male.stats[stat];
+                            const actualValue = calculateStatValue(male, stat);
+                            const isTarget = selectedStats.includes(stat);
+                            return `
+                                <div class="stat-summary ${isTarget ? 'target-stat' : ''}" style="${isTarget ? 'border: 2px solid #22d3ee;' : ''}">
+                                    <div class="stat-name">${config.name}</div>
+                                    <div class="stat-value">${formatStatValue(actualValue, stat)}</div>
+                                    <div style="font-size: 10px; color: #94a3b8;">(${statData.wild}-${statData.mutations}-${statData.tamed})</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMutationProgression(female, male, selectedStats, maxGenerations) {
+            const container = document.getElementById('mutationProgressionTable');
+            if (!container) return;
+            
+            // Calculate baseline from the better parent for each stat
+            const baselineStats = {};
+            let baselineLevel = Math.max(female.level, male.level);
+            let baselineTotalStatLevels = 0;
+            
+            selectedStats.forEach(stat => {
+                const femaleStatValue = calculateStatValue(female, stat);
+                const maleStatValue = calculateStatValue(male, stat);
+                const betterParent = femaleStatValue >= maleStatValue ? female : male;
+                
+                baselineStats[stat] = {
+                    value: Math.max(femaleStatValue, maleStatValue),
+                    wild: betterParent.stats[stat].wild,
+                    mutations: betterParent.stats[stat].mutations,
+                    tamed: betterParent.stats[stat].tamed,
+                    parent: betterParent
+                };
+                
+                baselineTotalStatLevels += betterParent.stats[stat].wild + betterParent.stats[stat].mutations + betterParent.stats[stat].tamed;
+            });
+            
+            // Add non-selected stats to baseline total
+            Object.keys(statConfig).forEach(stat => {
+                if (!selectedStats.includes(stat)) {
+                    const femaleStatLevels = female.stats[stat].wild + female.stats[stat].mutations + female.stats[stat].tamed;
+                    const maleStatLevels = male.stats[stat].wild + male.stats[stat].mutations + male.stats[stat].tamed;
+                    baselineTotalStatLevels += Math.max(femaleStatLevels, maleStatLevels);
+                }
+            });
+            
+            const baselineTotalLevel = baselineLevel + baselineTotalStatLevels;
+            
+            // Build table headers
+            let headerHtml = `
+                <th>Generation</th>
+                <th>Total Mutations</th>
+                <th>Total Level</th>
+                <th>Level Gain</th>
+            `;
+            
+            selectedStats.forEach(stat => {
+                headerHtml += `
+                    <th style="color: ${statConfig[stat].color};">${statConfig[stat].name} Value</th>
+                    <th style="color: ${statConfig[stat].color};">${statConfig[stat].name} Levels</th>
+                `;
+            });
+            
+            let tableHtml = `
+                <table class="mutation-table">
+                    <thead>
+                        <tr>${headerHtml}</tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Baseline row
+            let baselineRowHtml = `
+                <tr style="background-color: rgba(34, 211, 238, 0.1);">
+                    <td class="generation-cell">Baseline</td>
+                    <td style="text-align: center;">0</td>
+                    <td class="level-cell">${baselineTotalLevel}</td>
+                    <td class="difference-cell">-</td>
+            `;
+            
+            selectedStats.forEach(stat => {
+                const baseStat = baselineStats[stat];
+                baselineRowHtml += `
+                    <td class="stat-cell ${statConfig[stat].color}">${formatStatValue(baseStat.value, stat)}</td>
+                    <td style="text-align: center; font-size: 12px;">(${baseStat.wild}-${baseStat.mutations}-${baseStat.tamed})</td>
+                `;
+            });
+            
+            baselineRowHtml += '</tr>';
+            tableHtml += baselineRowHtml;
+            
+            // Generation rows
+            for (let gen = 1; gen <= maxGenerations; gen++) {
+                const totalMutationLevels = gen * selectedStats.length * 2; // 2 levels per stat per generation
+                const currentTotalLevel = baselineTotalLevel + totalMutationLevels;
+                const levelGain = totalMutationLevels;
+                
+                let rowHtml = `
+                    <tr>
+                        <td class="generation-cell">${gen}</td>
+                        <td style="text-align: center; color: #f472b6;">${gen * selectedStats.length}</td>
+                        <td class="level-cell">${currentTotalLevel}</td>
+                        <td class="difference-cell">+${levelGain}</td>
+                `;
+                
+                selectedStats.forEach(stat => {
+                    const baseStat = baselineStats[stat];
+                    const currentMutations = baseStat.mutations + (gen * 2);
+                    const currentWild = baseStat.wild;
+                    const currentTamed = baseStat.tamed;
+                    
+                    // Calculate stat value increase (rough approximation)
+                    const baseTotalLevels = baseStat.wild + baseStat.mutations + baseStat.tamed;
+                    const currentTotalLevels = currentWild + currentMutations + currentTamed;
+                    const levelRatio = baseTotalLevels > 0 ? currentTotalLevels / baseTotalLevels : 1;
+                    const currentStatValue = Math.round(baseStat.value * levelRatio);
+                    
+                    rowHtml += `
+                        <td class="stat-cell ${statConfig[stat].color}">${formatStatValue(currentStatValue, stat)}</td>
+                        <td style="text-align: center; font-size: 12px;">(${currentWild}-${currentMutations}-${currentTamed})</td>
+                    `;
+                });
+                
+                rowHtml += '</tr>';
+                tableHtml += rowHtml;
+            }
+            
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        function exportMutationPlan() {
+            const femaleId = parseInt(document.getElementById('perfectFemale').value);
+            const maleId = parseInt(document.getElementById('perfectMale').value);
+            const maxGenerations = parseInt(document.getElementById('maxGenerations').value) || 20;
+            
+            // Get selected mutation stats
+            const selectedStats = [];
+            Object.keys(statConfig).forEach(stat => {
+                const checkbox = document.getElementById(`${stat}Mutation`);
+                if (checkbox && checkbox.checked) {
+                    selectedStats.push(stat);
+                }
+            });
+            
+            if (!femaleId || !maleId || selectedStats.length === 0) {
+                alert('Please select both parents and at least one stat for mutation first.');
+                return;
+            }
+            
+            const female = findDinoById(femaleId);
+            const male = findDinoById(maleId);
+            
+            const exportData = {
+                planType: 'mutation_progression',
+                female: { 
+                    id: female.id, 
+                    name: female.name, 
+                    species: female.species, 
+                    level: female.level + calculateTotalLevels(female.stats),
+                    stats: female.stats
+                },
+                male: { 
+                    id: male.id, 
+                    name: male.name, 
+                    species: male.species, 
+                    level: male.level + calculateTotalLevels(male.stats),
+                    stats: male.stats
+                },
+                selectedStats: selectedStats,
+                maxGenerations: maxGenerations,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `mutation-plan-${female.name}-${male.name}-${selectedStats.join('-')}-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importMutationPlan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const planData = JSON.parse(e.target.result);
+                    
+                    if (planData.planType !== 'mutation_progression') {
+                        throw new Error('Invalid mutation plan file');
+                    }
+                    
+                    // Try to find matching dinos by name and species
+                    const matchingFemale = dinosaurs.find(d => 
+                        d.name === planData.female.name && 
+                        d.species === planData.female.species && 
+                        d.gender === 'Female'
+                    );
+                    const matchingMale = dinosaurs.find(d => 
+                        d.name === planData.male.name && 
+                        d.species === planData.male.species && 
+                        d.gender === 'Male'
+                    );
+                    
+                    if (matchingFemale) {
+                        document.getElementById('perfectFemale').value = matchingFemale.id;
+                    }
+                    if (matchingMale) {
+                        document.getElementById('perfectMale').value = matchingMale.id;
+                    }
+                    
+                    // Set selected stats
+                    Object.keys(statConfig).forEach(stat => {
+                        const checkbox = document.getElementById(`${stat}Mutation`);
+                        if (checkbox) {
+                            checkbox.checked = planData.selectedStats.includes(stat);
+                        }
+                    });
+                    
+                    // Set generations
+                    document.getElementById('maxGenerations').value = planData.maxGenerations;
+                    
+                    updateMutationPlan();
+                    
+                    let message = 'Mutation plan imported successfully!';
+                    if (!matchingFemale || !matchingMale) {
+                        message += '\n\nWarning: Could not find matching parent dinos. Please select the correct parents manually.';
+                    }
+                    alert(message);
+                    
+                } catch (error) {
+                    alert('Error importing mutation plan: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            event.target.value = '';
+        }
+
+        function clearMutationPlan() {
+            if (confirm('Are you sure you want to clear the current mutation plan?')) {
+                // Clear parent selections
+                document.getElementById('perfectFemale').value = '';
+                document.getElementById('perfectMale').value = '';
+                
+                // Clear stat selections
+                Object.keys(statConfig).forEach(stat => {
+                    const checkbox = document.getElementById(`${stat}Mutation`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                });
+                
+                // Reset generations
+                document.getElementById('maxGenerations').value = 20;
+                
+                // Hide plan display
+                document.getElementById('mutationPlanDisplay').style.display = 'none';
+            }
+        }
+
+        // ===============================================
+        // ENHANCED ARK BREEDING TRACKER
         // ===============================================
         
         // Global variables
         let dinosaurs = [];
         let editingId = null;
         let currentPotentialOffspring = null;
-        let nextId = 1; // Simple, clean integer IDs starting at 1
+        let nextId = 1;
         let customSpeciesList = [
             'Rex', 'Raptor', 'Spino', 'Carno', 'Trike', 'Stego', 'Bronto', 'Parasaur', 'Dilo', 'Compy',
             'Argentavis', 'Pteranodon', 'Quetzal', 'Ankylo', 'Doed', 'Beaver', 'Mammoth', 'Theri', 'Giga',
             'Mosasaur', 'Megalodon', 'Plesi', 'Ichthy', 'Sarco', 'Bary', 'Kapro', 'Arthro', 'Scorp', 'Spider',
             'Griffin', 'Phoenix', 'Wyvern', 'Drake', 'Basilisk', 'Reaper', 'Karkinos', 'Ravager', 'Enforcer'
         ];
-
-        // BULLETPROOF ID Generation - Simple Integer Counter
-        function generateId() {
-            return nextId++;
-        }
-
-        // BULLETPROOF ID Management - Keep track of highest ID
-        function updateNextId() {
-            if (dinosaurs.length === 0) {
-                nextId = 1;
-                return;
-            }
-            
-            const maxId = Math.max(...dinosaurs.map(d => d.id));
-            nextId = maxId + 1;
-            console.log(`📊 Updated nextId to: ${nextId}`);
-        }
-
-        // ===============================================
-        // MIGRATION SYSTEM - FROM OLD TO NEW
-        // ===============================================
-
-        // Check if migration is needed
-        function needsMigration() {
-            if (dinosaurs.length === 0) return false;
-            
-            // Check for fractional IDs (old system)
-            const hasFractionalIds = dinosaurs.some(d => !Number.isInteger(d.id) || d.id > 1000000000000);
-            
-            console.log(`🔍 Migration check: ${hasFractionalIds ? 'NEEDED' : 'NOT NEEDED'}`);
-            return hasFractionalIds;
-        }
-
-        // Show migration notice
-        function showMigrationNotice() {
-            if (needsMigration()) {
-                document.getElementById('migrationNotice').classList.remove('hidden');
-                console.log('📢 Showing migration notice');
-            }
-        }
-
-        // Hide migration notice
-        function hideMigrationNotice() {
-            document.getElementById('migrationNotice').classList.add('hidden');
-        }
-
-        // PERFORM COMPLETE MIGRATION - REBUILD EVERYTHING FROM SCRATCH
-        function performMigration() {
-            console.log('🚀 Starting complete data migration...');
-            console.log(`📊 Found ${dinosaurs.length} dinosaurs to migrate`);
-            
-            if (dinosaurs.length === 0) {
-                hideMigrationNotice();
-                return;
-            }
-            
-            // Step 1: Create ID mapping from old to new
-            const idMap = new Map();
-            let newId = 1;
-            
-            // Assign new clean integer IDs
-            dinosaurs.forEach(dino => {
-                const oldId = dino.id;
-                idMap.set(oldId, newId);
-                dino.id = newId;
-                console.log(`🔄 ${dino.name}: ${oldId} → ${newId}`);
-                newId++;
-            });
-            
-            // Step 2: Update all parent references
-            dinosaurs.forEach(dino => {
-                if (dino.parent1Id) {
-                    const newParent1Id = idMap.get(dino.parent1Id);
-                    if (newParent1Id) {
-                        dino.parent1Id = newParent1Id;
-                        console.log(`✅ Fixed ${dino.name} parent1: → ${newParent1Id}`);
-                    } else {
-                        console.log(`⚠️ ${dino.name} parent1 not found, setting to null`);
-                        dino.parent1Id = null;
-                    }
-                }
-                
-                if (dino.parent2Id) {
-                    const newParent2Id = idMap.get(dino.parent2Id);
-                    if (newParent2Id) {
-                        dino.parent2Id = newParent2Id;
-                        console.log(`✅ Fixed ${dino.name} parent2: → ${newParent2Id}`);
-                    } else {
-                        console.log(`⚠️ ${dino.name} parent2 not found, setting to null`);
-                        dino.parent2Id = null;
-                    }
-                }
-            });
-            
-            // Step 3: Update nextId counter
-            nextId = newId;
-            
-            // Step 4: Save and refresh everything
-            saveData();
-            renderDinosaurs();
-            updateParentSelects();
-            updateModalParentSelects();
-            populateSpeciesFilter();
-            populateMainSpeciesFilter();
-            
-            // Hide notice and show success
-            hideMigrationNotice();
-            
-            console.log(`✅ Migration complete! All ${dinosaurs.length} dinosaurs now have clean integer IDs (1-${newId-1})`);
-            alert(`🎉 Migration successful!\n\n✅ Migrated ${dinosaurs.length} dinosaurs\n✅ Fixed all parent relationships\n✅ Clean integer IDs (1-${newId-1})\n\nYour lineage tree should now work perfectly!`);
-        }
-
-        // ===============================================
-        // CORE FUNCTIONS - REBUILT FOR ROBUSTNESS
-        // ===============================================
 
         // Stat configuration
         const statConfig = {
@@ -1424,42 +2491,23 @@
             speed: { name: 'Speed', icon: 'images/speed.webp', color: 'speed' }
         };
 
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-            updateNextId();
-            showMigrationNotice(); // Check if migration is needed
-            populateSpeciesDropdown();
-            createStatsForm();
-            renderDinosaurs();
-            updateParentSelects();
-            updateModalParentSelects();
-            setupStatPreferenceListeners();
-            populateSpeciesFilter();
-            populateMainSpeciesFilter();
-        });
+        // ===============================================
+        // CORE HELPER FUNCTIONS
+        // ===============================================
 
-        // ROBUST Data management
-        function loadData() {
-            const saved = localStorage.getItem('arkBreedingData');
-            if (saved) {
-                dinosaurs = JSON.parse(saved);
-                console.log(`📂 Loaded ${dinosaurs.length} dinosaurs from storage`);
-            }
-            
-            const savedSpecies = localStorage.getItem('arkSpeciesList');
-            if (savedSpecies) {
-                customSpeciesList = JSON.parse(savedSpecies);
-            }
+        function generateId() {
+            return nextId++;
         }
 
-        function saveData() {
-            localStorage.setItem('arkBreedingData', JSON.stringify(dinosaurs));
-            localStorage.setItem('arkSpeciesList', JSON.stringify(customSpeciesList));
-            console.log(`💾 Saved ${dinosaurs.length} dinosaurs to storage`);
+        function updateNextId() {
+            if (dinosaurs.length === 0) {
+                nextId = 1;
+                return;
+            }
+            const maxId = Math.max(...dinosaurs.map(d => d.id));
+            nextId = maxId + 1;
         }
 
-        // ROBUST Parent lookups - simple integer comparison
         function findDinoById(id) {
             return dinosaurs.find(d => d.id === id);
         }
@@ -1481,82 +2529,794 @@
             return parents;
         }
 
-        // Filtering functions
-        function populateMainSpeciesFilter() {
-            const speciesFilter = document.getElementById('speciesFilterMain');
-            const species = [...new Set(dinosaurs.map(d => d.species))].sort();
-            
-            const currentValue = speciesFilter.value;
-            speciesFilter.innerHTML = '<option value="all">All Species</option>';
-            species.forEach(sp => {
-                const option = document.createElement('option');
-                option.value = sp;
-                option.textContent = sp;
-                speciesFilter.appendChild(option);
-            });
-            speciesFilter.value = currentValue;
+        function isFoundation(dino) {
+            return !dino.parent1Id && !dino.parent2Id;
         }
 
-        function applyFilters() {
-            renderDinosaurs();
+        function getGeneration(dino) {
+            if (isFoundation(dino)) return 0;
+            
+            const parents = getParents(dino);
+            if (parents.length === 0) return 0;
+            
+            const parentGenerations = parents.map(p => getGeneration(p));
+            return Math.max(...parentGenerations) + 1;
         }
 
-        function clearAllFilters() {
-            document.getElementById('speciesFilterMain').value = 'all';
-            document.getElementById('genderFilter').value = 'all';
-            document.getElementById('favoritesOnlyFilter').checked = false;
+        function calculateStatValue(dino, statName, visited = new Set()) {
+            const stat = dino.stats[statName];
             
-            // Clear all stat filters
-            Object.keys(statConfig).forEach(stat => {
-                document.getElementById(`${stat}Filter`).checked = false;
-            });
-            
-            applyFilters();
-        }
-
-        function getFilteredDinosaurs() {
-            let filtered = [...dinosaurs];
-            
-            // Species filter
-            const speciesFilter = document.getElementById('speciesFilterMain').value;
-            if (speciesFilter !== 'all') {
-                filtered = filtered.filter(dino => dino.species === speciesFilter);
+            if (visited.has(dino.id)) {
+                console.warn(`Circular DNA link detected for ${dino.name} ${statName}`);
+                return stat.value;
             }
             
-            // Gender filter
-            const genderFilter = document.getElementById('genderFilter').value;
-            if (genderFilter !== 'all') {
-                filtered = filtered.filter(dino => dino.gender === genderFilter);
+            if (!stat.isDnaLinked || !stat.sourceParentId) {
+                return stat.value;
             }
             
-            // Favorites only filter
-            const favoritesOnly = document.getElementById('favoritesOnlyFilter').checked;
-            if (favoritesOnly) {
-                filtered = filtered.filter(dino => {
-                    return Object.values(dino.stats).some(stat => stat.favorite);
+            const sourceParent = findDinoById(stat.sourceParentId);
+            if (!sourceParent) {
+                console.warn(`Source parent ${stat.sourceParentId} not found for ${dino.name}`);
+                return stat.value;
+            }
+            
+            visited.add(dino.id);
+            const parentCalculatedValue = calculateStatValue(sourceParent, statName, visited);
+            visited.delete(dino.id);
+            
+            return parentCalculatedValue;
+        }
+
+        function getInheritedStatProperties(dino, statName) {
+            const stat = dino.stats[statName];
+            
+            if (!stat.isDnaLinked || !stat.sourceParentId) {
+                return null;
+            }
+            
+            const sourceParent = findDinoById(stat.sourceParentId);
+            if (!sourceParent) {
+                return null;
+            }
+            
+            return {
+                wild: sourceParent.stats[statName].wild,
+                mutations: sourceParent.stats[statName].mutations,
+                tamed: sourceParent.stats[statName].tamed,
+                favorite: sourceParent.stats[statName].favorite,
+                gender: sourceParent.gender,
+                parentName: sourceParent.name
+            };
+        }
+
+        function formatStatValue(value, stat) {
+            if (stat === 'melee' || stat === 'speed') {
+                return `${value}%`;
+            }
+            if (value >= 1000) {
+                return `${(value / 1000).toFixed(1)}K`;
+            }
+            return value.toString();
+        }
+
+        function calculateTotalLevels(stats) {
+            let total = 0;
+            Object.values(stats).forEach(stat => {
+                total += stat.wild + stat.mutations + stat.tamed;
+            });
+            return total;
+        }
+
+        // ===============================================
+        // NEW CASCADE UPDATE FUNCTION
+        // ===============================================
+
+        function cascadeStatUpdates(parentId, changedStats) {
+            console.log(`🔄 Cascading updates from parent ${parentId} for stats: ${changedStats.join(', ')}`);
+            
+            // Find all descendants that have DNA links to this parent
+            const descendants = [];
+            
+            function findDescendants(currentParentId, visited = new Set()) {
+                if (visited.has(currentParentId)) return;
+                visited.add(currentParentId);
+                
+                const children = getChildren(currentParentId);
+                children.forEach(child => {
+                    descendants.push(child);
+                    findDescendants(child.id, visited);
                 });
             }
             
-            // Stat filters - show dinos that have ANY of the selected stats as favorites
-            const selectedStatFilters = [];
-            Object.keys(statConfig).forEach(stat => {
-                if (document.getElementById(`${stat}Filter`).checked) {
-                    selectedStatFilters.push(stat);
+            findDescendants(parentId);
+            
+            let updatesCount = 0;
+            
+            // Update each descendant that has DNA links to the changed parent
+            descendants.forEach(descendant => {
+                let dinoUpdated = false;
+                
+                changedStats.forEach(statName => {
+                    const stat = descendant.stats[statName];
+                    if (stat.isDnaLinked && stat.sourceParentId === parentId) {
+                        // Update the stat value from the parent
+                        const parent = findDinoById(parentId);
+                        if (parent) {
+                            const newValue = calculateStatValue(parent, statName);
+                            const parentStat = parent.stats[statName];
+                            
+                            descendant.stats[statName] = {
+                                ...stat,
+                                value: newValue,
+                                wild: parentStat.wild,
+                                mutations: parentStat.mutations,
+                                tamed: parentStat.tamed,
+                                favorite: parentStat.favorite
+                            };
+                            
+                            dinoUpdated = true;
+                            console.log(`  ↳ Updated ${descendant.name} ${statName}: ${newValue}`);
+                        }
+                    }
+                });
+                
+                if (dinoUpdated) {
+                    updatesCount++;
                 }
             });
             
-            if (selectedStatFilters.length > 0) {
-                filtered = filtered.filter(dino => {
-                    return selectedStatFilters.some(stat => dino.stats[stat].favorite);
+            if (updatesCount > 0) {
+                console.log(`✅ Cascade update complete: ${updatesCount} descendants updated`);
+                saveData();
+                renderDinosaurs();
+                updateBreedingPreview();
+            }
+        }
+
+        // ===============================================
+        // ENHANCED STATS FORM WITH INLINE DNA LINKING
+        // ===============================================
+
+        function createStatsForm() {
+            const statsForm = document.getElementById('statsForm');
+            if (!statsForm) {
+                console.error('Stats form container not found');
+                return;
+            }
+            
+            statsForm.innerHTML = '';
+            
+            Object.entries(statConfig).forEach(([key, config]) => {
+                const row = document.createElement('div');
+                row.className = 'stat-form-row';
+                row.id = `stat-row-${key}`;
+                row.innerHTML = `
+                    <div class="stat-form-label ${config.color}">
+                        <img src="${config.icon}" alt="${config.name}" class="stat-icon">
+                        <span>${config.name}</span>
+                    </div>
+                    <div class="stat-form-group">
+                        <label>Value</label>
+                        <input type="number" id="${key}Value" value="${key === 'melee' || key === 'speed' ? 100 : 0}" onfocus="this.select()">
+                    </div>
+                    <div class="stat-form-group">
+                        <label>Wild</label>
+                        <input type="number" id="${key}Wild" value="0" min="0" onfocus="this.select()" oninput="updateLevelCalculation()">
+                    </div>
+                    <div class="stat-form-group">
+                        <label>Mutations</label>
+                        <input type="number" id="${key}Mutations" value="0" min="0" step="2" onfocus="this.select()" oninput="updateLevelCalculation()">
+                    </div>
+                    <div class="stat-form-group">
+                        <label>Tamed</label>
+                        <input type="number" id="${key}Tamed" value="0" min="0" onfocus="this.select()" oninput="updateLevelCalculation()">
+                    </div>
+                    <div class="inheritance-controls hidden" id="${key}InheritanceControls">
+                        <div class="parent-selector">
+                            <select class="parent-select" id="${key}ParentSelect" onchange="updateStatInheritance('${key}')">
+                                <option value="">Select Parent</option>
+                            </select>
+                        </div>
+                        <div class="parent-gender-toggle" id="${key}GenderToggle">
+                            <div class="gender-option male" data-gender="male" onclick="selectParentGender('${key}', 'male')">♂️</div>
+                            <div class="gender-option female" data-gender="female" onclick="selectParentGender('${key}', 'female')">♀️</div>
+                        </div>
+                    </div>
+                    <div class="dna-toggle manual" id="${key}DnaToggle" onclick="toggleDnaLink('${key}')" title="Click to enable DNA linking">
+                        🔓
+                    </div>
+                    <div class="star-favorite" id="${key}Star" onclick="toggleFavorite('${key}')" title="Mark as favorite stat">
+                        ☆
+                    </div>
+                `;
+                statsForm.appendChild(row);
+            });
+        }
+
+        function toggleDnaLink(statName) {
+            try {
+                const row = document.getElementById(`stat-row-${statName}`);
+                const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                const inheritanceControls = document.getElementById(`${statName}InheritanceControls`);
+                
+                if (!dnaToggle || !inheritanceControls || !row) {
+                    console.error(`Missing elements for ${statName}`);
+                    return;
+                }
+                
+                const isCurrentlyLinked = dnaToggle.classList.contains('linked');
+                
+                if (isCurrentlyLinked) {
+                    // Switch to manual
+                    dnaToggle.classList.remove('linked');
+                    dnaToggle.classList.add('manual');
+                    dnaToggle.textContent = '🔓';
+                    dnaToggle.title = 'Manual mode - Click to enable DNA linking';
+                    
+                    row.classList.remove('dna-linked');
+                    inheritanceControls.classList.add('hidden');
+                    
+                    // Make inputs editable
+                    ['Value', 'Wild', 'Mutations', 'Tamed'].forEach(suffix => {
+                        const input = document.getElementById(`${statName}${suffix}`);
+                        if (input) {
+                            input.removeAttribute('readonly');
+                            input.style.backgroundColor = '#374151';
+                            input.style.color = 'white';
+                        }
+                    });
+                    
+                    console.log(`🔧 ${statName} switched to manual mode`);
+                } else {
+                    // Switch to DNA linked
+                    const parents = getCurrentParents();
+                    if (parents.length === 0) {
+                        alert('Please select at least one parent first to enable DNA linking.');
+                        return;
+                    }
+                    
+                    dnaToggle.classList.remove('manual');
+                    dnaToggle.classList.add('linked');
+                    dnaToggle.textContent = '🧬';
+                    dnaToggle.title = 'DNA linked - Click to switch to manual mode';
+                    
+                    row.classList.add('dna-linked');
+                    inheritanceControls.classList.remove('hidden');
+                    
+                    // Populate parent options
+                    updateParentOptions(statName);
+                    
+                    // Auto-select first available parent
+                    const parentSelect = document.getElementById(`${statName}ParentSelect`);
+                    if (parentSelect && parentSelect.options.length > 1) {
+                        parentSelect.selectedIndex = 1;
+                        updateStatInheritance(statName);
+                    }
+                    
+                    console.log(`🧬 ${statName} switched to DNA linked mode`);
+                }
+            } catch (error) {
+                console.error(`Error toggling DNA link for ${statName}:`, error);
+            }
+        }
+
+        function getCurrentParents() {
+            const parent1Id = document.getElementById('dinoParent1').value;
+            const parent2Id = document.getElementById('dinoParent2').value;
+            
+            const parents = [];
+            if (parent1Id) {
+                const parent1 = findDinoById(parseInt(parent1Id));
+                if (parent1) parents.push(parent1);
+            }
+            if (parent2Id) {
+                const parent2 = findDinoById(parseInt(parent2Id));
+                if (parent2) parents.push(parent2);
+            }
+            
+            return parents;
+        }
+
+        function updateParentOptions(statName) {
+            const parentSelect = document.getElementById(`${statName}ParentSelect`);
+            if (!parentSelect) return;
+            
+            const parents = getCurrentParents();
+            
+            parentSelect.innerHTML = '<option value="">Select Parent</option>';
+            
+            parents.forEach(parent => {
+                const genderIcon = parent.gender === 'Male' ? '♂️' : '♀️';
+                const statValue = calculateStatValue(parent, statName);
+                const parentStat = parent.stats[statName];
+                const levels = `(${parentStat.wild}-${parentStat.mutations}-${parentStat.tamed})`;
+                
+                const option = document.createElement('option');
+                option.value = parent.id;
+                option.textContent = `${genderIcon} ${parent.name} - ${formatStatValue(statValue, statName)} ${levels}`;
+                option.dataset.gender = parent.gender.toLowerCase();
+                parentSelect.appendChild(option);
+            });
+        }
+
+        function updateModalParentSelection() {
+            Object.keys(statConfig).forEach(statName => {
+                const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                if (dnaToggle && dnaToggle.classList.contains('linked')) {
+                    updateParentOptions(statName);
+                }
+            });
+        }
+
+        function selectParentGender(statName, gender) {
+            const genderToggle = document.getElementById(`${statName}GenderToggle`);
+            if (!genderToggle) return;
+            
+            const options = genderToggle.querySelectorAll('.gender-option');
+            
+            options.forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.gender === gender) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Update parent selection based on gender preference
+            const parentSelect = document.getElementById(`${statName}ParentSelect`);
+            if (!parentSelect) return;
+            
+            const parents = getCurrentParents();
+            const preferredParent = parents.find(p => p.gender.toLowerCase() === gender);
+            
+            if (preferredParent) {
+                parentSelect.value = preferredParent.id;
+                updateStatInheritance(statName);
+            }
+        }
+
+        function updateStatInheritance(statName) {
+            const parentSelect = document.getElementById(`${statName}ParentSelect`);
+            if (!parentSelect) return;
+            
+            const selectedParentId = parseInt(parentSelect.value);
+            
+            if (!selectedParentId) return;
+            
+            const selectedParent = findDinoById(selectedParentId);
+            if (!selectedParent) return;
+            
+            const parentStat = selectedParent.stats[statName];
+            const calculatedValue = calculateStatValue(selectedParent, statName);
+            
+            // Update form inputs with inherited values
+            const valueInput = document.getElementById(`${statName}Value`);
+            const wildInput = document.getElementById(`${statName}Wild`);
+            const mutationsInput = document.getElementById(`${statName}Mutations`);
+            const tamedInput = document.getElementById(`${statName}Tamed`);
+            
+            if (valueInput) valueInput.value = calculatedValue;
+            if (wildInput) wildInput.value = parentStat.wild;
+            if (mutationsInput) mutationsInput.value = parentStat.mutations;
+            if (tamedInput) tamedInput.value = parentStat.tamed;
+            
+            // Update favorite status
+            const star = document.getElementById(`${statName}Star`);
+            if (star) {
+                if (parentStat.favorite) {
+                    star.textContent = '★';
+                    star.classList.add('active');
+                } else {
+                    star.textContent = '☆';
+                    star.classList.remove('active');
+                }
+            }
+            
+            // Make inputs readonly
+            [valueInput, wildInput, mutationsInput, tamedInput].forEach(input => {
+                if (input) {
+                    input.setAttribute('readonly', true);
+                    input.style.backgroundColor = '#2d3748';
+                    input.style.color = '#94a3b8';
+                }
+            });
+            
+            // Update gender toggle to show selected parent's gender
+            const genderToggle = document.getElementById(`${statName}GenderToggle`);
+            if (genderToggle) {
+                const options = genderToggle.querySelectorAll('.gender-option');
+                options.forEach(option => {
+                    option.classList.remove('active');
+                    if (option.dataset.gender === selectedParent.gender.toLowerCase()) {
+                        option.classList.add('active');
+                    }
                 });
             }
             
-            return filtered;
+            updateLevelCalculation();
+            
+            console.log(`🔗 ${statName} inheriting from ${selectedParent.name} (${selectedParent.gender})`);
         }
 
-        // Species management
+        function toggleFavorite(statName) {
+            const star = document.getElementById(`${statName}Star`);
+            if (!star) return;
+            
+            const isCurrentlyFavorite = star.classList.contains('active');
+            
+            if (isCurrentlyFavorite) {
+                star.textContent = '☆';
+                star.classList.remove('active');
+            } else {
+                star.textContent = '★';
+                star.classList.add('active');
+            }
+            
+            console.log(`⭐ ${statName} favorite status: ${!isCurrentlyFavorite}`);
+        }
+
+        function updateLevelCalculation() {
+            let totalLevels = 0;
+            Object.keys(statConfig).forEach(statName => {
+                const wildInput = document.getElementById(`${statName}Wild`);
+                const mutationsInput = document.getElementById(`${statName}Mutations`);
+                const tamedInput = document.getElementById(`${statName}Tamed`);
+                
+                const wild = wildInput ? (parseInt(wildInput.value) || 0) : 0;
+                const mutations = mutationsInput ? (parseInt(mutationsInput.value) || 0) : 0;
+                const tamed = tamedInput ? (parseInt(tamedInput.value) || 0) : 0;
+                totalLevels += wild + mutations + tamed;
+            });
+            
+            const baseLevelInput = document.getElementById('dinoLevel');
+            const baseLevel = baseLevelInput ? (parseInt(baseLevelInput.value) || 1) : 1;
+            const finalLevel = baseLevel + totalLevels;
+            
+            const display = document.getElementById('totalLevelDisplay');
+            if (display) {
+                display.textContent = `Base: ${baseLevel} + Stats: ${totalLevels} = Total: ${finalLevel}`;
+            }
+        }
+
+        // ===============================================
+        // MODAL AND FORM FUNCTIONS
+        // ===============================================
+
+        function openAddForm() {
+            try {
+                editingId = null;
+                document.getElementById('modalTitle').textContent = 'Add New Dinosaur';
+                clearForm();
+                document.getElementById('modal').classList.remove('hidden');
+                console.log('✅ Modal opened for adding new dinosaur');
+            } catch (error) {
+                console.error('❌ Error opening add form:', error);
+            }
+        }
+
+        function openEditForm(id) {
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Dinosaur';
+            const dino = findDinoById(id);
+            if (dino) {
+                populateForm(dino);
+                document.getElementById('modal').classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            const speciesManager = document.getElementById('speciesManager');
+            const customSpecies = document.getElementById('customSpecies');
+            if (speciesManager) speciesManager.style.display = 'none';
+            if (customSpecies) customSpecies.style.display = 'none';
+        }
+
+        function clearForm() {
+            // Clear basic info
+            const elements = ['dinoName', 'dinoSpecies', 'customSpecies', 'dinoGender', 'dinoLevel', 'dinoParent1', 'dinoParent2'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'select-one') {
+                        element.selectedIndex = 0;
+                    } else {
+                        element.value = id === 'dinoLevel' ? '1' : (id === 'dinoGender' ? 'Male' : '');
+                    }
+                }
+            });
+            
+            // Hide custom species input
+            const customSpecies = document.getElementById('customSpecies');
+            if (customSpecies) customSpecies.style.display = 'none';
+            
+            // Clear stats
+            Object.keys(statConfig).forEach(statName => {
+                // Reset form inputs
+                const valueInput = document.getElementById(`${statName}Value`);
+                const wildInput = document.getElementById(`${statName}Wild`);
+                const mutationsInput = document.getElementById(`${statName}Mutations`);
+                const tamedInput = document.getElementById(`${statName}Tamed`);
+                
+                if (valueInput) valueInput.value = statName === 'melee' || statName === 'speed' ? 100 : 0;
+                if (wildInput) wildInput.value = 0;
+                if (mutationsInput) mutationsInput.value = 0;
+                if (tamedInput) tamedInput.value = 0;
+                
+                // Reset UI elements
+                const star = document.getElementById(`${statName}Star`);
+                if (star) {
+                    star.textContent = '☆';
+                    star.classList.remove('active');
+                }
+                
+                const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                if (dnaToggle) {
+                    dnaToggle.classList.remove('linked');
+                    dnaToggle.classList.add('manual');
+                    dnaToggle.textContent = '🔓';
+                    dnaToggle.title = 'Manual mode - Click to enable DNA linking';
+                }
+                
+                const row = document.getElementById(`stat-row-${statName}`);
+                if (row) {
+                    row.classList.remove('dna-linked');
+                }
+                
+                const inheritanceControls = document.getElementById(`${statName}InheritanceControls`);
+                if (inheritanceControls) {
+                    inheritanceControls.classList.add('hidden');
+                }
+                
+                // Reset parent selection
+                const parentSelect = document.getElementById(`${statName}ParentSelect`);
+                if (parentSelect) {
+                    parentSelect.innerHTML = '<option value="">Select Parent</option>';
+                }
+                
+                const genderToggle = document.getElementById(`${statName}GenderToggle`);
+                if (genderToggle) {
+                    const options = genderToggle.querySelectorAll('.gender-option');
+                    options.forEach(option => option.classList.remove('active'));
+                }
+                
+                // Make inputs editable
+                [valueInput, wildInput, mutationsInput, tamedInput].forEach(input => {
+                    if (input) {
+                        input.removeAttribute('readonly');
+                        input.style.backgroundColor = '#374151';
+                        input.style.color = 'white';
+                    }
+                });
+            });
+            
+            updateLevelCalculation();
+        }
+
+        function populateForm(dino) {
+            document.getElementById('dinoName').value = dino.name;
+            
+            if (customSpeciesList.includes(dino.species)) {
+                document.getElementById('dinoSpecies').value = dino.species;
+            } else {
+                document.getElementById('dinoSpecies').value = 'custom';
+                const customSpecies = document.getElementById('customSpecies');
+                customSpecies.value = dino.species;
+                customSpecies.style.display = 'block';
+            }
+            
+            document.getElementById('dinoGender').value = dino.gender;
+            document.getElementById('dinoLevel').value = dino.level;
+            document.getElementById('dinoParent1').value = dino.parent1Id || '';
+            document.getElementById('dinoParent2').value = dino.parent2Id || '';
+            
+            Object.keys(statConfig).forEach(statName => {
+                const statData = dino.stats[statName];
+                
+                // Populate basic stat values
+                document.getElementById(`${statName}Value`).value = statData.value;
+                document.getElementById(`${statName}Wild`).value = statData.wild;
+                document.getElementById(`${statName}Mutations`).value = statData.mutations;
+                document.getElementById(`${statName}Tamed`).value = statData.tamed;
+                
+                // Set favorite status
+                const star = document.getElementById(`${statName}Star`);
+                if (statData.favorite) {
+                    star.textContent = '★';
+                    star.classList.add('active');
+                } else {
+                    star.textContent = '☆';
+                    star.classList.remove('active');
+                }
+                
+                // Set DNA linking status
+                const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                const row = document.getElementById(`stat-row-${statName}`);
+                const inheritanceControls = document.getElementById(`${statName}InheritanceControls`);
+                
+                if (statData.isDnaLinked) {
+                    dnaToggle.classList.remove('manual');
+                    dnaToggle.classList.add('linked');
+                    dnaToggle.textContent = '🧬';
+                    dnaToggle.title = 'DNA linked - Click to switch to manual mode';
+                    
+                    row.classList.add('dna-linked');
+                    inheritanceControls.classList.remove('hidden');
+                    
+                    // Update parent options and select the source parent
+                    setTimeout(() => {
+                        updateParentOptions(statName);
+                        const parentSelect = document.getElementById(`${statName}ParentSelect`);
+                        if (statData.sourceParentId) {
+                            parentSelect.value = statData.sourceParentId;
+                            
+                            // Set gender toggle based on source parent
+                            const sourceParent = findDinoById(statData.sourceParentId);
+                            if (sourceParent) {
+                                const genderToggle = document.getElementById(`${statName}GenderToggle`);
+                                const options = genderToggle.querySelectorAll('.gender-option');
+                                options.forEach(option => {
+                                    option.classList.remove('active');
+                                    if (option.dataset.gender === sourceParent.gender.toLowerCase()) {
+                                        option.classList.add('active');
+                                    }
+                                });
+                            }
+                        }
+                    }, 100);
+                    
+                    // Make inputs readonly
+                    ['Value', 'Wild', 'Mutations', 'Tamed'].forEach(suffix => {
+                        const input = document.getElementById(`${statName}${suffix}`);
+                        if (input) {
+                            input.setAttribute('readonly', true);
+                            input.style.backgroundColor = '#2d3748';
+                            input.style.color = '#94a3b8';
+                        }
+                    });
+                } else {
+                    dnaToggle.classList.remove('linked');
+                    dnaToggle.classList.add('manual');
+                    dnaToggle.textContent = '🔓';
+                    dnaToggle.title = 'Manual mode - Click to enable DNA linking';
+                    
+                    row.classList.remove('dna-linked');
+                    inheritanceControls.classList.add('hidden');
+                    
+                    // Make inputs editable
+                    ['Value', 'Wild', 'Mutations', 'Tamed'].forEach(suffix => {
+                        const input = document.getElementById(`${statName}${suffix}`);
+                        if (input) {
+                            input.removeAttribute('readonly');
+                            input.style.backgroundColor = '#374151';
+                            input.style.color = 'white';
+                        }
+                    });
+                }
+            });
+            
+            updateLevelCalculation();
+            updateModalParentSelection();
+        }
+
+        function saveDino() {
+            try {
+                const name = document.getElementById('dinoName').value.trim();
+                let species = document.getElementById('dinoSpecies').value;
+                
+                if (species === 'custom') {
+                    species = document.getElementById('customSpecies').value.trim();
+                }
+                
+                if (!name || !species) {
+                    alert('Please fill in name and species');
+                    return;
+                }
+
+                // Store original stats for cascade checking
+                const originalDino = editingId ? findDinoById(editingId) : null;
+                const changedStats = [];
+
+                const stats = {};
+                Object.keys(statConfig).forEach(statName => {
+                    const star = document.getElementById(`${statName}Star`);
+                    const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                    const parentSelect = document.getElementById(`${statName}ParentSelect`);
+                    const valueInput = document.getElementById(`${statName}Value`);
+                    const wildInput = document.getElementById(`${statName}Wild`);
+                    const mutationsInput = document.getElementById(`${statName}Mutations`);
+                    const tamedInput = document.getElementById(`${statName}Tamed`);
+                    
+                    const isDnaLinked = dnaToggle && dnaToggle.classList.contains('linked');
+                    const sourceParentId = isDnaLinked && parentSelect && parentSelect.value ? 
+                        parseInt(parentSelect.value) : null;
+                    
+                    const newStatData = {
+                        value: valueInput ? (parseInt(valueInput.value) || 0) : 0,
+                        wild: wildInput ? (parseInt(wildInput.value) || 0) : 0,
+                        mutations: mutationsInput ? (parseInt(mutationsInput.value) || 0) : 0,
+                        tamed: tamedInput ? (parseInt(tamedInput.value) || 0) : 0,
+                        favorite: star && star.classList.contains('active'),
+                        isDnaLinked: isDnaLinked,
+                        sourceParentId: sourceParentId
+                    };
+                    
+                    // Check if this stat changed compared to original
+                    if (originalDino && originalDino.stats[statName]) {
+                        const originalStat = originalDino.stats[statName];
+                        if (originalStat.value !== newStatData.value ||
+                            originalStat.wild !== newStatData.wild ||
+                            originalStat.mutations !== newStatData.mutations ||
+                            originalStat.tamed !== newStatData.tamed ||
+                            originalStat.favorite !== newStatData.favorite) {
+                            changedStats.push(statName);
+                        }
+                    }
+                    
+                    stats[statName] = newStatData;
+                });
+
+                const parent1Value = document.getElementById('dinoParent1').value;
+                const parent2Value = document.getElementById('dinoParent2').value;
+                
+                const dinoData = {
+                    id: editingId || generateId(),
+                    name: name,
+                    species: species,
+                    gender: document.getElementById('dinoGender').value,
+                    level: parseInt(document.getElementById('dinoLevel').value) || 1,
+                    stats: stats,
+                    parent1Id: parent1Value ? parseInt(parent1Value) : null,
+                    parent2Id: parent2Value ? parseInt(parent2Value) : null,
+                    dateAdded: editingId ? findDinoById(editingId)?.dateAdded : new Date().toISOString()
+                };
+
+                console.log(`💾 Saving ${editingId ? 'edited' : 'new'} dino: ${dinoData.name} (ID: ${dinoData.id})`);
+
+                if (editingId) {
+                    const index = dinosaurs.findIndex(d => d.id === editingId);
+                    if (index !== -1) {
+                        dinosaurs[index] = dinoData;
+                        
+                        // Trigger cascade updates if this is an existing dino with changed stats
+                        if (changedStats.length > 0) {
+                            setTimeout(() => {
+                                cascadeStatUpdates(editingId, changedStats);
+                            }, 100);
+                        }
+                    }
+                } else {
+                    dinosaurs.push(dinoData);
+                }
+
+                saveData();
+                renderDinosaurs();
+                updateParentSelects();
+                updateModalParentSelects();
+                populateMainSpeciesFilter();
+                populateSpeciesFilter();
+                populatePerfectParentSelects();
+                populatePerfectParentSelects();
+                setupStatPreferenceListeners();
+                updateBreedingPreview();
+                closeModal();
+                
+                const linkedStats = Object.keys(stats).filter(s => stats[s].isDnaLinked);
+                console.log(`✅ Saved with DNA links: ${linkedStats.join(', ')}`);
+            } catch (error) {
+                console.error('❌ Error saving dinosaur:', error);
+                alert('There was an error saving the dinosaur. Please try again.');
+            }
+        }
+
+        // ===============================================
+        // SPECIES MANAGEMENT
+        // ===============================================
+
         function populateSpeciesDropdown() {
             const select = document.getElementById('dinoSpecies');
+            if (!select) return;
+            
             select.innerHTML = '<option value="">Select Species</option>';
             customSpeciesList.sort().forEach(species => {
                 const option = document.createElement('option');
@@ -1575,26 +3335,32 @@
             const select = document.getElementById('dinoSpecies');
             const customInput = document.getElementById('customSpecies');
             
-            if (select.value === 'custom') {
-                customInput.style.display = 'block';
-                customInput.focus();
-            } else {
-                customInput.style.display = 'none';
+            if (select && customInput) {
+                if (select.value === 'custom') {
+                    customInput.style.display = 'block';
+                    customInput.focus();
+                } else {
+                    customInput.style.display = 'none';
+                }
             }
         }
 
         function toggleSpeciesManager() {
             const manager = document.getElementById('speciesManager');
-            if (manager.style.display === 'none') {
-                manager.style.display = 'block';
-                updateSpeciesList();
-            } else {
-                manager.style.display = 'none';
+            if (manager) {
+                if (manager.style.display === 'none') {
+                    manager.style.display = 'block';
+                    updateSpeciesList();
+                } else {
+                    manager.style.display = 'none';
+                }
             }
         }
 
         function addSpecies() {
             const input = document.getElementById('newSpecies');
+            if (!input) return;
+            
             const species = input.value.trim();
             
             if (species && !customSpeciesList.includes(species)) {
@@ -1619,6 +3385,8 @@
 
         function updateSpeciesList() {
             const list = document.getElementById('speciesList');
+            if (!list) return;
+            
             list.innerHTML = customSpeciesList.map(species => `
                 <div class="species-tag">
                     <span>${species}</span>
@@ -1627,415 +3395,10 @@
             `).join('');
         }
 
-        // Perfect Dino Mode
-        function togglePerfectDinoMode() {
-            const checkbox = document.getElementById('perfectDinoMode');
-            const preferences = document.getElementById('statPreferences');
-            
-            console.log(`🎯 Perfect Dino Mode toggled: ${checkbox.checked}`);
-            
-            if (checkbox.checked) {
-                preferences.style.display = 'grid';
-                console.log('📊 Showing stat preferences');
-            } else {
-                preferences.style.display = 'none';
-                console.log('🎲 Hiding stat preferences - Random mode');
-            }
-            
-            // Immediately update breeding preview to reflect the change
-            updateBreedingPreview();
-        }
+        // ===============================================
+        // RENDERING AND DISPLAY
+        // ===============================================
 
-        function setupStatPreferenceListeners() {
-            Object.keys(statConfig).forEach(stat => {
-                const select = document.getElementById(`${stat}Pref`);
-                if (select) {
-                    select.addEventListener('change', updateBreedingPreview);
-                }
-            });
-        }
-
-        // Calculate total levels
-        function calculateTotalLevels(stats) {
-            let total = 0;
-            Object.values(stats).forEach(stat => {
-                total += stat.wild + stat.tamed;
-            });
-            return total;
-        }
-
-        // Update level calculation display
-        function updateLevelCalculation() {
-            Object.keys(statConfig).forEach(stat => {
-                const wild = parseInt(document.getElementById(`${stat}Wild`).value) || 0;
-                const tamed = parseInt(document.getElementById(`${stat}Tamed`).value) || 0;
-                const display = document.getElementById(`${stat}LevelDisplay`);
-                if (display) {
-                    display.textContent = `${wild + tamed}`;
-                }
-            });
-            
-            // Calculate total
-            let totalLevels = 0;
-            Object.keys(statConfig).forEach(stat => {
-                const wild = parseInt(document.getElementById(`${stat}Wild`).value) || 0;
-                const tamed = parseInt(document.getElementById(`${stat}Tamed`).value) || 0;
-                totalLevels += wild + tamed;
-            });
-            
-            const baseLevel = parseInt(document.getElementById('dinoLevel').value) || 1;
-            const finalLevel = baseLevel + totalLevels;
-            
-            document.getElementById('totalLevelDisplay').textContent = `Base: ${baseLevel} + Stats: ${totalLevels} = Total: ${finalLevel}`;
-        }
-
-        // Simple star toggle function
-        function toggleStar(stat) {
-            const star = document.getElementById(`star_${stat}`);
-            if (star.textContent === '☆') {
-                star.textContent = '★';
-                star.style.color = '#fbbf24';
-            } else {
-                star.textContent = '☆';
-                star.style.color = '#4b5563';
-            }
-        }
-
-        // Create stats form
-        function createStatsForm() {
-            const statsForm = document.getElementById('statsForm');
-            
-            // Add total level display
-            const totalDisplay = document.createElement('div');
-            totalDisplay.innerHTML = `
-                <div id="totalLevelDisplay" style="background-color: #374151; padding: 8px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: bold; color: #22d3ee;">
-                    Base: 1 + Stats: 0 = Total: 1
-                </div>
-            `;
-            statsForm.appendChild(totalDisplay);
-            
-            Object.entries(statConfig).forEach(([key, config]) => {
-                const row = document.createElement('div');
-                row.className = 'stat-form-row';
-                row.innerHTML = `
-                    <div class="stat-form-label ${config.color}">
-                        <img src="${config.icon}" alt="${config.name}" class="stat-icon">
-                        <span>${config.name}</span>
-                    </div>
-                    <div class="stat-form-group">
-                        <label>Value</label>
-                        <input type="number" id="${key}Value" value="${key === 'melee' || key === 'speed' ? 100 : 0}" onfocus="this.select()">
-                    </div>
-                    <div class="stat-form-group">
-                        <label>Wild</label>
-                        <input type="number" id="${key}Wild" value="0" min="0" onfocus="this.select()" oninput="updateLevelCalculation()">
-                    </div>
-                    <div class="stat-form-group">
-                        <label>Mutations</label>
-                        <input type="number" id="${key}Mutations" value="0" min="0" onfocus="this.select()">
-                    </div>
-                    <div class="stat-form-group">
-                        <label>Tamed</label>
-                        <input type="number" id="${key}Tamed" value="0" min="0" onfocus="this.select()" oninput="updateLevelCalculation()">
-                    </div>
-                    <div class="level-display">
-                        <div>Total</div>
-                        <div id="${key}LevelDisplay">0</div>
-                    </div>
-                    <div class="star-favorite" onclick="toggleStar('${key}')">
-                        <span id="star_${key}">☆</span>
-                    </div>
-                `;
-                statsForm.appendChild(row);
-            });
-        }
-
-        // Modal functions
-        function openAddForm() {
-            editingId = null;
-            document.getElementById('modalTitle').textContent = 'Add New Dinosaur';
-            clearForm();
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        function openEditForm(id) {
-            editingId = id;
-            document.getElementById('modalTitle').textContent = 'Edit Dinosaur';
-            const dino = findDinoById(id);
-            if (dino) {
-                populateForm(dino);
-                document.getElementById('modal').classList.remove('hidden');
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-            document.getElementById('speciesManager').style.display = 'none';
-            document.getElementById('customSpecies').style.display = 'none';
-        }
-
-        function clearForm() {
-            document.getElementById('dinoName').value = '';
-            document.getElementById('dinoSpecies').value = '';
-            document.getElementById('customSpecies').value = '';
-            document.getElementById('customSpecies').style.display = 'none';
-            document.getElementById('dinoGender').value = 'Male';
-            document.getElementById('dinoLevel').value = '1';
-            document.getElementById('dinoParent1').value = '';
-            document.getElementById('dinoParent2').value = '';
-            
-            Object.keys(statConfig).forEach(stat => {
-                document.getElementById(`${stat}Value`).value = stat === 'melee' || stat === 'speed' ? 100 : 0;
-                document.getElementById(`${stat}Wild`).value = 0;
-                document.getElementById(`${stat}Mutations`).value = 0;
-                document.getElementById(`${stat}Tamed`).value = 0;
-                
-                // Reset stars
-                const star = document.getElementById(`star_${stat}`);
-                star.textContent = '☆';
-                star.style.color = '#4b5563';
-            });
-            
-            updateLevelCalculation();
-        }
-
-        function populateForm(dino) {
-            document.getElementById('dinoName').value = dino.name;
-            
-            if (customSpeciesList.includes(dino.species)) {
-                document.getElementById('dinoSpecies').value = dino.species;
-            } else {
-                document.getElementById('dinoSpecies').value = 'custom';
-                document.getElementById('customSpecies').value = dino.species;
-                document.getElementById('customSpecies').style.display = 'block';
-            }
-            
-            document.getElementById('dinoGender').value = dino.gender;
-            document.getElementById('dinoLevel').value = dino.level;
-            document.getElementById('dinoParent1').value = dino.parent1Id || '';
-            document.getElementById('dinoParent2').value = dino.parent2Id || '';
-            
-            Object.keys(statConfig).forEach(stat => {
-                const statData = dino.stats[stat];
-                document.getElementById(`${stat}Value`).value = statData.value;
-                document.getElementById(`${stat}Wild`).value = statData.wild;
-                document.getElementById(`${stat}Mutations`).value = statData.mutations;
-                document.getElementById(`${stat}Tamed`).value = statData.tamed;
-                
-                // Set star state
-                const star = document.getElementById(`star_${stat}`);
-                if (statData.favorite) {
-                    star.textContent = '★';
-                    star.style.color = '#fbbf24';
-                } else {
-                    star.textContent = '☆';
-                    star.style.color = '#4b5563';
-                }
-            });
-            
-            updateLevelCalculation();
-        }
-
-        // ROBUST Duplicate dinosaur with clean ID
-        function duplicateDino(id) {
-            const originalDino = findDinoById(id);
-            if (!originalDino) return;
-            
-            // Create unique name
-            let baseName = originalDino.name;
-            let copyNumber = 1;
-            let newName = `${baseName} (Copy)`;
-            
-            while (dinosaurs.some(d => d.name === newName)) {
-                copyNumber++;
-                newName = `${baseName} (Copy ${copyNumber})`;
-            }
-            
-            const duplicatedDino = {
-                ...originalDino,
-                id: generateId(), // Clean integer ID
-                name: newName,
-                dateAdded: new Date().toISOString()
-            };
-            
-            dinosaurs.push(duplicatedDino);
-            console.log(`📄 Duplicated ${originalDino.name} → ${newName} (ID: ${duplicatedDino.id})`);
-            
-            saveData();
-            renderDinosaurs();
-            updateParentSelects();
-            updateModalParentSelects();
-            populateSpeciesFilter();
-            populateMainSpeciesFilter();
-            updateBreedingPreview();
-        }
-
-        // ROBUST Save dinosaur with clean ID
-        function saveDino() {
-            const name = document.getElementById('dinoName').value.trim();
-            let species = document.getElementById('dinoSpecies').value;
-            
-            if (species === 'custom') {
-                species = document.getElementById('customSpecies').value.trim();
-            }
-            
-            if (!name || !species) {
-                alert('Please fill in name and species');
-                return;
-            }
-
-            const stats = {};
-            Object.keys(statConfig).forEach(stat => {
-                const star = document.getElementById(`star_${stat}`);
-                stats[stat] = {
-                    value: parseInt(document.getElementById(`${stat}Value`).value) || 0,
-                    wild: parseInt(document.getElementById(`${stat}Wild`).value) || 0,
-                    mutations: parseInt(document.getElementById(`${stat}Mutations`).value) || 0,
-                    tamed: parseInt(document.getElementById(`${stat}Tamed`).value) || 0,
-                    favorite: star && star.textContent === '★'
-                };
-            });
-
-            // ROBUST parent ID handling - clean integers only
-            const parent1Value = document.getElementById('dinoParent1').value;
-            const parent2Value = document.getElementById('dinoParent2').value;
-            
-            const dinoData = {
-                id: editingId || generateId(), // Clean integer ID
-                name: name,
-                species: species,
-                gender: document.getElementById('dinoGender').value,
-                level: parseInt(document.getElementById('dinoLevel').value) || 1,
-                stats: stats,
-                parent1Id: parent1Value ? parseInt(parent1Value) : null,
-                parent2Id: parent2Value ? parseInt(parent2Value) : null,
-                dateAdded: editingId ? findDinoById(editingId)?.dateAdded : new Date().toISOString()
-            };
-
-            console.log(`💾 Saving dino: ${dinoData.name} (ID: ${dinoData.id})`);
-
-            if (editingId) {
-                const index = dinosaurs.findIndex(d => d.id === editingId);
-                dinosaurs[index] = dinoData;
-            } else {
-                dinosaurs.push(dinoData);
-            }
-
-            saveData();
-            renderDinosaurs();
-            updateParentSelects();
-            updateModalParentSelects();
-            populateSpeciesFilter();
-            populateMainSpeciesFilter();
-            updateBreedingPreview();
-            closeModal();
-        }
-
-        // Delete dinosaur
-        function deleteDino(id) {
-            const dino = findDinoById(id);
-            if (!dino) return;
-            
-            if (confirm(`Are you sure you want to delete ${dino.name}?`)) {
-                dinosaurs = dinosaurs.filter(d => d.id !== id);
-                console.log(`🗑️ Deleted ${dino.name} (ID: ${id})`);
-                
-                saveData();
-                renderDinosaurs();
-                updateParentSelects();
-                updateModalParentSelects();
-                populateSpeciesFilter();
-                populateMainSpeciesFilter();
-                updateBreedingPreview();
-                currentPotentialOffspring = null;
-            }
-        }
-
-        // Format stat value
-        function formatStatValue(value, stat) {
-            if (stat === 'melee' || stat === 'speed') {
-                return `${value}%`;
-            }
-            if (value >= 1000) {
-                return `${(value / 1000).toFixed(1)}K`;
-            }
-            return value.toString();
-        }
-
-        // Drag and drop functionality
-        function setupDragAndDrop() {
-            const dinoCards = document.querySelectorAll('.dino-card');
-            
-            dinoCards.forEach(card => {
-                card.draggable = true;
-                
-                card.addEventListener('dragstart', (e) => {
-                    card.classList.add('dragging');
-                    e.dataTransfer.setData('text/plain', card.dataset.dinoId);
-                });
-                
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                });
-                
-                card.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    
-                    const rect = card.getBoundingClientRect();
-                    const midpoint = rect.left + rect.width / 2;
-                    const isLeftSide = e.clientX < midpoint;
-                    
-                    card.classList.remove('drag-over-left', 'drag-over-right');
-                    
-                    if (isLeftSide) {
-                        card.classList.add('drag-over-left');
-                    } else {
-                        card.classList.add('drag-over-right');
-                    }
-                });
-                
-                card.addEventListener('dragleave', () => {
-                    card.classList.remove('drag-over-left', 'drag-over-right');
-                });
-                
-                card.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    card.classList.remove('drag-over-left', 'drag-over-right');
-                    
-                    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
-                    const targetId = parseInt(card.dataset.dinoId);
-                    
-                    if (draggedId !== targetId) {
-                        const rect = card.getBoundingClientRect();
-                        const midpoint = rect.left + rect.width / 2;
-                        const isLeftSide = e.clientX < midpoint;
-                        
-                        const draggedIndex = dinosaurs.findIndex(d => d.id === draggedId);
-                        const targetIndex = dinosaurs.findIndex(d => d.id === targetId);
-                        
-                        if (draggedIndex !== -1 && targetIndex !== -1) {
-                            const draggedDino = dinosaurs.splice(draggedIndex, 1)[0];
-                            
-                            let insertIndex = targetIndex;
-                            if (draggedIndex < targetIndex) {
-                                insertIndex--;
-                            }
-                            
-                            if (!isLeftSide) {
-                                insertIndex++;
-                            }
-                            
-                            dinosaurs.splice(insertIndex, 0, draggedDino);
-                            
-                            saveData();
-                            renderDinosaurs();
-                        }
-                    }
-                });
-            });
-        }
-
-        // Render dinosaurs
         function renderDinosaurs() {
             const dinoGrid = document.getElementById('dinoGrid');
             const emptyState = document.getElementById('emptyState');
@@ -2065,48 +3428,212 @@
             dinoGrid.innerHTML = filteredDinosaurs.map(dino => {
                 const totalLevels = calculateTotalLevels(dino.stats);
                 const finalLevel = dino.level + totalLevels;
+                const generation = getGeneration(dino);
+                const foundation = isFoundation(dino);
+                
+                let cardClass = 'dino-card';
+                if (foundation) {
+                    cardClass += ' foundation';
+                } else if (dino.gender === 'Male') {
+                    cardClass += ' male';
+                } else {
+                    cardClass += ' female';
+                }
+                
+                // Get parent info for display
+                const parents = getParents(dino);
+                const parentInfo = parents.length > 0 ? 
+                    `Parents: ${parents.map(p => `${p.gender === 'Male' ? '♂️' : '♀️'}${p.name}`).join(' × ')}` : '';
                 
                 return `
-                    <div class="dino-card" data-dino-id="${dino.id}">
-                        <div class="dino-header">
-                            <div class="dino-info">
-                                <h3>
-                                    <span class="gender-indicator ${dino.gender === 'Male' ? 'gender-male' : 'gender-female'}"></span>
-                                    ${dino.name}
-                                </h3>
-                                <p>${dino.species} • ${dino.gender} • Level ${finalLevel} • ID: ${dino.id}</p>
-                            </div>
-                            <div class="dino-actions">
-                                <button class="action-btn edit" onclick="openEditForm(${dino.id})" title="Edit">✏️</button>
-                                <button class="action-btn duplicate" onclick="duplicateDino(${dino.id})" title="Duplicate">📄</button>
-                                <button class="action-btn delete" onclick="deleteDino(${dino.id})" title="Delete">🗑️</button>
-                            </div>
-                        </div>
-                        <div class="dino-stats">
-                            ${Object.entries(dino.stats).map(([stat, data]) => {
-                                const isFavorite = data.favorite || false;
-                                return `
-                                <div class="dino-stat">
-                                    <img src="${statConfig[stat].icon}" alt="${statConfig[stat].name}" class="stat-icon ${statConfig[stat].color}">
-                                    <span class="dino-stat-value ${isFavorite ? 'favorite' : ''}">${formatStatValue(data.value, stat)}</span>
-                                    <span class="dino-stat-levels ${isFavorite ? 'favorite' : ''}">(${data.wild}-${data.mutations}-${data.tamed})</span>
+                    <div class="${cardClass}" data-dino-id="${dino.id}">
+                        <div class="dino-card-content">
+                            <div class="dino-header">
+                                <div class="dino-info">
+                                    <h3>
+                                        <span class="gender-indicator ${dino.gender === 'Male' ? 'gender-male' : 'gender-female'}"></span>
+                                        ${dino.name}
+                                        <span class="generation-badge ${foundation ? 'foundation' : ''}">${foundation ? 'F' : `G${generation}`}</span>
+                                    </h3>
+                                    <p>${dino.species} • ${dino.gender} • Level ${finalLevel} • ID: ${dino.id}</p>
+                                    ${parentInfo ? `<div class="parent-info">${parentInfo}</div>` : ''}
                                 </div>
-                            `}).join('')}
-                        </div>
-                        <div class="level-info">
-                            Base: ${dino.level} + Stats: ${totalLevels} = Total: ${finalLevel}
+                                <div class="dino-actions">
+                                    <button class="action-btn edit" onclick="openEditForm(${dino.id})" title="Edit">✏️</button>
+                                    <button class="action-btn duplicate" onclick="duplicateDino(${dino.id})" title="Duplicate">📄</button>
+                                    <button class="action-btn delete" onclick="deleteDino(${dino.id})" title="Delete">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="dino-stats">
+                                ${Object.entries(dino.stats).map(([stat, data]) => {
+                                    const actualValue = calculateStatValue(dino, stat);
+                                    const inheritanceInfo = getInheritedStatProperties(dino, stat);
+                                    let inheritanceIndicator = '';
+                                    
+                                    if (data.isDnaLinked && inheritanceInfo) {
+                                        const genderClass = inheritanceInfo.gender === 'Male' ? 'from-male' : 'from-female';
+                                        const genderIcon = inheritanceInfo.gender === 'Male' ? '♂' : '♀';
+                                        inheritanceIndicator = `<span class="inheritance-indicator ${genderClass}" title="Inherited from ${inheritanceInfo.parentName} (${inheritanceInfo.gender})">${genderIcon}</span>`;
+                                    }
+                                    
+                                    return `
+                                    <div class="dino-stat">
+                                        <img src="${statConfig[stat].icon}" alt="${statConfig[stat].name}" class="stat-icon ${statConfig[stat].color}">
+                                        <span class="dino-stat-value ${data.favorite ? 'favorite' : ''}">${formatStatValue(actualValue, stat)}</span>
+                                        <span class="dino-stat-levels ${data.favorite ? 'favorite' : ''}">(${data.wild}-${data.mutations}-${data.tamed})</span>
+                                        ${inheritanceIndicator}
+                                    </div>
+                                `}).join('')}
+                            </div>
+                            <div class="level-info">
+                                Base: ${dino.level} + Stats: ${totalLevels} = Total: ${finalLevel}
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
-            
-            setupDragAndDrop();
         }
 
-        // ROBUST Update parent selects with clean IDs
+        // ===============================================
+        // FILTERING FUNCTIONS
+        // ===============================================
+
+        function populateMainSpeciesFilter() {
+            const speciesFilter = document.getElementById('speciesFilterMain');
+            if (!speciesFilter) return;
+            
+            const species = [...new Set(dinosaurs.map(d => d.species))].sort();
+            
+            const currentValue = speciesFilter.value;
+            speciesFilter.innerHTML = '<option value="all">All Species</option>';
+            species.forEach(sp => {
+                const option = document.createElement('option');
+                option.value = sp;
+                option.textContent = sp;
+                speciesFilter.appendChild(option);
+            });
+            speciesFilter.value = currentValue;
+        }
+
+        function applyFilters() {
+            renderDinosaurs();
+        }
+
+        function clearAllFilters() {
+            const elements = ['speciesFilterMain', 'genderFilter', 'favoritesOnlyFilter'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = false;
+                    } else {
+                        element.value = element.id === 'speciesFilterMain' ? 'all' : 'all';
+                    }
+                }
+            });
+            
+            Object.keys(statConfig).forEach(stat => {
+                const filter = document.getElementById(`${stat}Filter`);
+                if (filter) filter.checked = false;
+            });
+            
+            applyFilters();
+        }
+
+        function getFilteredDinosaurs() {
+            let filtered = [...dinosaurs];
+            
+            const speciesFilter = document.getElementById('speciesFilterMain');
+            if (speciesFilter && speciesFilter.value !== 'all') {
+                filtered = filtered.filter(dino => dino.species === speciesFilter.value);
+            }
+            
+            const genderFilter = document.getElementById('genderFilter');
+            if (genderFilter && genderFilter.value !== 'all') {
+                filtered = filtered.filter(dino => dino.gender === genderFilter.value);
+            }
+            
+            const favoritesOnly = document.getElementById('favoritesOnlyFilter');
+            if (favoritesOnly && favoritesOnly.checked) {
+                filtered = filtered.filter(dino => {
+                    return Object.values(dino.stats).some(stat => stat.favorite);
+                });
+            }
+            
+            const selectedStatFilters = [];
+            Object.keys(statConfig).forEach(stat => {
+                const filter = document.getElementById(`${stat}Filter`);
+                if (filter && filter.checked) {
+                    selectedStatFilters.push(stat);
+                }
+            });
+            
+            if (selectedStatFilters.length > 0) {
+                filtered = filtered.filter(dino => {
+                    return selectedStatFilters.some(stat => dino.stats[stat].favorite);
+                });
+            }
+            
+            return filtered;
+        }
+
+        // ===============================================
+        // UTILITY FUNCTIONS
+        // ===============================================
+
+        function duplicateDino(id) {
+            const originalDino = findDinoById(id);
+            if (!originalDino) return;
+            
+            let baseName = originalDino.name;
+            let copyNumber = 1;
+            let newName = `${baseName} (Copy)`;
+            
+            while (dinosaurs.some(d => d.name === newName)) {
+                copyNumber++;
+                newName = `${baseName} (Copy ${copyNumber})`;
+            }
+            
+            const duplicatedDino = {
+                ...originalDino,
+                id: generateId(),
+                name: newName,
+                dateAdded: new Date().toISOString()
+            };
+            
+            dinosaurs.push(duplicatedDino);
+            saveData();
+            renderDinosaurs();
+            updateParentSelects();
+            updateModalParentSelects();
+            populateMainSpeciesFilter();
+            populatePerfectParentSelects();
+            updateBreedingPreview();
+        }
+
+        function deleteDino(id) {
+            const dino = findDinoById(id);
+            if (!dino) return;
+            
+            if (confirm(`Are you sure you want to delete ${dino.name}?`)) {
+                dinosaurs = dinosaurs.filter(d => d.id !== id);
+                saveData();
+                renderDinosaurs();
+                updateParentSelects();
+                updateModalParentSelects();
+                populateMainSpeciesFilter();
+                populateSpeciesFilter();
+                populatePerfectParentSelects();
+                updateBreedingPreview();
+                currentPotentialOffspring = null;
+            }
+        }
+
         function updateParentSelects() {
             const parent1Select = document.getElementById('parent1Select');
             const parent2Select = document.getElementById('parent2Select');
+            
+            if (!parent1Select || !parent2Select) return;
             
             const currentParent1 = parent1Select.value;
             const currentParent2 = parent2Select.value;
@@ -2116,7 +3643,9 @@
             
             dinosaurs.forEach(dino => {
                 const genderIcon = dino.gender === 'Male' ? '♂️' : '♀️';
-                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [ID: ${dino.id}]`;
+                const generation = getGeneration(dino);
+                const genBadge = isFoundation(dino) ? 'F' : `G${generation}`;
+                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [${genBadge}] [ID: ${dino.id}]`;
                 
                 const option1 = document.createElement('option');
                 option1.value = dino.id;
@@ -2133,10 +3662,11 @@
             parent2Select.value = currentParent2;
         }
 
-        // ROBUST Update modal parent selects with clean IDs
         function updateModalParentSelects() {
             const parent1Select = document.getElementById('dinoParent1');
             const parent2Select = document.getElementById('dinoParent2');
+            
+            if (!parent1Select || !parent2Select) return;
             
             const currentParent1 = parent1Select.value;
             const currentParent2 = parent2Select.value;
@@ -2146,7 +3676,9 @@
             
             dinosaurs.forEach(dino => {
                 const genderIcon = dino.gender === 'Male' ? '♂️' : '♀️';
-                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [ID: ${dino.id}]`;
+                const generation = getGeneration(dino);
+                const genBadge = isFoundation(dino) ? 'F' : `G${generation}`;
+                const optionText = `${genderIcon} ${dino.name} (${dino.species}) [${genBadge}] [ID: ${dino.id}]`;
                 
                 const option1 = document.createElement('option');
                 option1.value = dino.id;
@@ -2163,7 +3695,25 @@
             parent2Select.value = currentParent2;
         }
 
-        // Update breeding preview
+        // ===============================================
+        // BREEDING CALCULATOR
+        // ===============================================
+
+        function togglePerfectDinoMode() {
+            const checkbox = document.getElementById('perfectDinoMode');
+            const preferences = document.getElementById('statPreferences');
+            
+            if (checkbox && preferences) {
+                if (checkbox.checked) {
+                    preferences.style.display = 'grid';
+                } else {
+                    preferences.style.display = 'none';
+                }
+            }
+            
+            updateBreedingPreview();
+        }
+
         function updateBreedingPreview() {
             const parent1Id = parseInt(document.getElementById('parent1Select').value);
             const parent2Id = parseInt(document.getElementById('parent2Select').value);
@@ -2171,8 +3721,6 @@
             const offspringStats = document.getElementById('offspringStats');
             const offspringLevelInfo = document.getElementById('offspringLevelInfo');
             const perfectMode = document.getElementById('perfectDinoMode').checked;
-            
-            console.log(`🧬 Breeding Preview: Parent1=${parent1Id}, Parent2=${parent2Id}, Perfect Mode=${perfectMode}`);
             
             if (!parent1Id || !parent2Id || parent1Id === parent2Id) {
                 preview.style.display = 'none';
@@ -2189,9 +3737,6 @@
                 return;
             }
             
-            console.log(`🧬 Parents: ${parent1.name} x ${parent2.name}`);
-            
-            // Calculate potential offspring stats
             const potentialStats = {};
             let totalWildLevels = 0;
             let totalTamedLevels = 0;
@@ -2201,79 +3746,89 @@
                 const p1Stat = parent1.stats[stat];
                 const p2Stat = parent2.stats[stat];
                 
-                let chosenValue, chosenWild, chosenTamed, chosenMutations, chosenParent;
+                let chosenValue, chosenWild, chosenTamed, chosenMutations, sourceParentId, chosenParent;
                 
                 if (perfectMode) {
-                    // Perfect mode - use preferences to choose best stats
                     const preferenceElement = document.getElementById(`${stat}Pref`);
-                    const preference = preferenceElement ? preferenceElement.value : 'highest';
+                    const preference = preferenceElement ? preferenceElement.value : 'parent1';
                     
-                    console.log(`🎯 ${stat}: P1=${p1Stat.value}, P2=${p2Stat.value}, Preference=${preference}`);
-                    
-                    if (preference === 'highest') {
-                        if (p1Stat.value > p2Stat.value) {
-                            chosenValue = p1Stat.value;
+                    switch (preference) {
+                        case 'parent1':
+                            chosenValue = calculateStatValue(parent1, stat);
                             chosenWild = p1Stat.wild;
                             chosenTamed = p1Stat.tamed;
                             chosenMutations = p1Stat.mutations;
-                            chosenParent = parent1.name;
-                        } else if (p2Stat.value > p1Stat.value) {
-                            chosenValue = p2Stat.value;
+                            sourceParentId = parent1.id;
+                            chosenParent = parent1;
+                            break;
+                        case 'parent2':
+                            chosenValue = calculateStatValue(parent2, stat);
                             chosenWild = p2Stat.wild;
                             chosenTamed = p2Stat.tamed;
                             chosenMutations = p2Stat.mutations;
-                            chosenParent = parent2.name;
-                        } else {
-                            // Equal values - choose parent 1 by default
-                            chosenValue = p1Stat.value;
-                            chosenWild = p1Stat.wild;
-                            chosenTamed = p1Stat.tamed;
-                            chosenMutations = p1Stat.mutations;
-                            chosenParent = parent1.name;
-                        }
-                    } else { // preference === 'lowest'
-                        if (p1Stat.value < p2Stat.value) {
-                            chosenValue = p1Stat.value;
-                            chosenWild = p1Stat.wild;
-                            chosenTamed = p1Stat.tamed;
-                            chosenMutations = p1Stat.mutations;
-                            chosenParent = parent1.name;
-                        } else if (p2Stat.value < p1Stat.value) {
-                            chosenValue = p2Stat.value;
-                            chosenWild = p2Stat.wild;
-                            chosenTamed = p2Stat.tamed;
-                            chosenMutations = p2Stat.mutations;
-                            chosenParent = parent2.name;
-                        } else {
-                            // Equal values - choose parent 1 by default
-                            chosenValue = p1Stat.value;
-                            chosenWild = p1Stat.wild;
-                            chosenTamed = p1Stat.tamed;
-                            chosenMutations = p1Stat.mutations;
-                            chosenParent = parent1.name;
-                        }
+                            sourceParentId = parent2.id;
+                            chosenParent = parent2;
+                            break;
+                        case 'highest':
+                            const p1Value = calculateStatValue(parent1, stat);
+                            const p2Value = calculateStatValue(parent2, stat);
+                            if (p1Value >= p2Value) {
+                                chosenValue = p1Value;
+                                chosenWild = p1Stat.wild;
+                                chosenTamed = p1Stat.tamed;
+                                chosenMutations = p1Stat.mutations;
+                                sourceParentId = parent1.id;
+                                chosenParent = parent1;
+                            } else {
+                                chosenValue = p2Value;
+                                chosenWild = p2Stat.wild;
+                                chosenTamed = p2Stat.tamed;
+                                chosenMutations = p2Stat.mutations;
+                                sourceParentId = parent2.id;
+                                chosenParent = parent2;
+                            }
+                            break;
+                        case 'lowest':
+                            const p1ValueLow = calculateStatValue(parent1, stat);
+                            const p2ValueLow = calculateStatValue(parent2, stat);
+                            if (p1ValueLow <= p2ValueLow) {
+                                chosenValue = p1ValueLow;
+                                chosenWild = p1Stat.wild;
+                                chosenTamed = p1Stat.tamed;
+                                chosenMutations = p1Stat.mutations;
+                                sourceParentId = parent1.id;
+                                chosenParent = parent1;
+                            } else {
+                                chosenValue = p2ValueLow;
+                                chosenWild = p2Stat.wild;
+                                chosenTamed = p2Stat.tamed;
+                                chosenMutations = p2Stat.mutations;
+                                sourceParentId = parent2.id;
+                                chosenParent = parent2;
+                            }
+                            break;
                     }
-                    
-                    console.log(`✅ ${stat}: Chose ${chosenValue} from ${chosenParent} (${preference})`);
                 } else {
-                    // Random mode - show both possibilities or random choice
                     const randomChoice = Math.random() < 0.5;
                     const chosenStat = randomChoice ? p1Stat : p2Stat;
-                    chosenValue = chosenStat.value;
+                    chosenParent = randomChoice ? parent1 : parent2;
+                    chosenValue = calculateStatValue(chosenParent, stat);
                     chosenWild = chosenStat.wild;
                     chosenTamed = chosenStat.tamed;
                     chosenMutations = chosenStat.mutations;
-                    chosenParent = randomChoice ? parent1.name : parent2.name;
-                    
-                    console.log(`🎲 ${stat}: Random chose ${chosenValue} from ${chosenParent}`);
+                    sourceParentId = chosenParent.id;
                 }
+                
+                const inheritedFavorite = chosenParent.stats[stat].favorite || false;
                 
                 potentialStats[stat] = {
                     value: chosenValue,
                     wild: chosenWild,
                     tamed: chosenTamed,
                     mutations: chosenMutations,
-                    favorite: p1Stat.favorite || p2Stat.favorite || false
+                    favorite: inheritedFavorite,
+                    isDnaLinked: true,
+                    sourceParentId: sourceParentId
                 };
                 
                 totalWildLevels += chosenWild;
@@ -2285,7 +3840,9 @@
                 stats: potentialStats,
                 baseLevel: Math.max(parent1.level, parent2.level),
                 species: parent1.species === parent2.species ? parent1.species : `${parent1.species}/${parent2.species}`,
-                perfectMode: perfectMode
+                perfectMode: perfectMode,
+                parent1Id: parent1Id,
+                parent2Id: parent2Id
             };
             
             let statsHtml = '';
@@ -2293,19 +3850,23 @@
                 const statData = potentialStats[stat];
                 const config = statConfig[stat];
                 const isFavorite = statData.favorite;
+                const sourceParent = findDinoById(statData.sourceParentId);
+                const sourceName = sourceParent ? sourceParent.name : 'Unknown';
+                const genderIcon = sourceParent ? (sourceParent.gender === 'Male' ? '♂' : '♀') : '';
                 
                 statsHtml += `
                     <div class="dino-stat">
                         <img src="${config.icon}" alt="${config.name}" class="stat-icon ${config.color}">
                         <span class="dino-stat-value ${isFavorite ? 'favorite' : ''}">${formatStatValue(statData.value, stat)}</span>
                         <span class="dino-stat-levels ${isFavorite ? 'favorite' : ''}">(${statData.wild}-${statData.mutations}-${statData.tamed})</span>
+                        <span class="inheritance-indicator" title="From ${sourceName}">${genderIcon}</span>
                     </div>
                 `;
             });
             
             offspringStats.innerHTML = statsHtml;
             
-            const totalStatLevels = totalWildLevels + totalTamedLevels;
+            const totalStatLevels = totalWildLevels + totalMutations + totalTamedLevels;
             const finalLevel = currentPotentialOffspring.baseLevel + totalStatLevels;
             const modeText = perfectMode ? 
                 '<br><span style="color: #22d3ee;">🎯 Perfect Dino Mode - Using Preferences</span>' : 
@@ -2317,17 +3878,16 @@
             `;
             
             preview.style.display = 'block';
+            
+            // Check for breeding recommendations
+            setTimeout(checkBreedingRecommendations, 500);
         }
 
-        // Save potential dino
         function savePotentialDino() {
             if (!currentPotentialOffspring) {
                 alert('No potential offspring to save');
                 return;
             }
-            
-            const parent1Id = document.getElementById('parent1Select').value;
-            const parent2Id = document.getElementById('parent2Select').value;
             
             editingId = null;
             document.getElementById('modalTitle').textContent = 'Save Potential Offspring';
@@ -2336,32 +3896,70 @@
             
             if (customSpeciesList.includes(currentPotentialOffspring.species)) {
                 document.getElementById('dinoSpecies').value = currentPotentialOffspring.species;
-                document.getElementById('customSpecies').style.display = 'none';
+                const customSpecies = document.getElementById('customSpecies');
+                if (customSpecies) customSpecies.style.display = 'none';
             } else {
                 document.getElementById('dinoSpecies').value = 'custom';
-                document.getElementById('customSpecies').value = currentPotentialOffspring.species;
-                document.getElementById('customSpecies').style.display = 'block';
+                const customSpecies = document.getElementById('customSpecies');
+                if (customSpecies) {
+                    customSpecies.value = currentPotentialOffspring.species;
+                    customSpecies.style.display = 'block';
+                }
             }
             
             document.getElementById('dinoGender').value = 'Male';
             document.getElementById('dinoLevel').value = currentPotentialOffspring.baseLevel;
-            document.getElementById('dinoParent1').value = parent1Id || '';
-            document.getElementById('dinoParent2').value = parent2Id || '';
+            document.getElementById('dinoParent1').value = currentPotentialOffspring.parent1Id || '';
+            document.getElementById('dinoParent2').value = currentPotentialOffspring.parent2Id || '';
             
-            Object.keys(statConfig).forEach(stat => {
-                const statData = currentPotentialOffspring.stats[stat];
-                document.getElementById(`${stat}Value`).value = statData.value;
-                document.getElementById(`${stat}Wild`).value = statData.wild;
-                document.getElementById(`${stat}Mutations`).value = statData.mutations;
-                document.getElementById(`${stat}Tamed`).value = statData.tamed;
+            Object.keys(statConfig).forEach(statName => {
+                const statData = currentPotentialOffspring.stats[statName];
                 
-                const star = document.getElementById(`star_${stat}`);
-                if (statData.favorite) {
-                    star.textContent = '★';
-                    star.style.color = '#fbbf24';
-                } else {
-                    star.textContent = '☆';
-                    star.style.color = '#4b5563';
+                const valueInput = document.getElementById(`${statName}Value`);
+                const wildInput = document.getElementById(`${statName}Wild`);
+                const mutationsInput = document.getElementById(`${statName}Mutations`);
+                const tamedInput = document.getElementById(`${statName}Tamed`);
+                
+                if (valueInput) valueInput.value = statData.value;
+                if (wildInput) wildInput.value = statData.wild;
+                if (mutationsInput) mutationsInput.value = statData.mutations;
+                if (tamedInput) tamedInput.value = statData.tamed;
+                
+                const star = document.getElementById(`${statName}Star`);
+                if (star) {
+                    if (statData.favorite) {
+                        star.textContent = '★';
+                        star.classList.add('active');
+                    } else {
+                        star.textContent = '☆';
+                        star.classList.remove('active');
+                    }
+                }
+                
+                const dnaToggle = document.getElementById(`${statName}DnaToggle`);
+                const row = document.getElementById(`stat-row-${statName}`);
+                const inheritanceControls = document.getElementById(`${statName}InheritanceControls`);
+                
+                if (statData.isDnaLinked && dnaToggle && row && inheritanceControls) {
+                    dnaToggle.classList.remove('manual');
+                    dnaToggle.classList.add('linked');
+                    dnaToggle.textContent = '🧬';
+                    row.classList.add('dna-linked');
+                    inheritanceControls.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        updateParentOptions(statName);
+                        const parentSelect = document.getElementById(`${statName}ParentSelect`);
+                        if (parentSelect && statData.sourceParentId) {
+                            parentSelect.value = statData.sourceParentId;
+                        }
+                    }, 100);
+                } else if (dnaToggle && row && inheritanceControls) {
+                    dnaToggle.classList.remove('linked');
+                    dnaToggle.classList.add('manual');
+                    dnaToggle.textContent = '🔓';
+                    row.classList.remove('dna-linked');
+                    inheritanceControls.classList.add('hidden');
                 }
             });
             
@@ -2369,9 +3967,33 @@
             document.getElementById('modal').classList.remove('hidden');
         }
 
-        // Populate species filter
+        function setupStatPreferenceListeners() {
+            Object.keys(statConfig).forEach(stat => {
+                const select = document.getElementById(`${stat}Pref`);
+                if (select) {
+                    select.addEventListener('change', updateBreedingPreview);
+                }
+            });
+        }
+
+        // ===============================================
+        // LINEAGE TREE FUNCTIONS
+        // ===============================================
+
+        function toggleLineageTree() {
+            const section = document.getElementById('lineageSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                renderLineageTree();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
         function populateSpeciesFilter() {
             const speciesFilter = document.getElementById('speciesFilter');
+            if (!speciesFilter) return;
+            
             const species = [...new Set(dinosaurs.map(d => d.species))].sort();
             
             speciesFilter.innerHTML = '<option value="all">All Species</option>';
@@ -2383,47 +4005,27 @@
             });
         }
 
-        // Toggle lineage tree visibility
-        function toggleLineageTree() {
-            const section = document.getElementById('lineageSection');
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                renderLineageTree();
-            } else {
-                section.style.display = 'none';
-            }
-        }
-
-        // ROBUST Build generational family tree
         function buildGenerationalFamilyTree() {
             const generationMap = new Map();
             const orphans = [];
             
-            console.log('🌳 Building family tree with clean IDs...');
-            
             function calculateGeneration(dino, visited = new Set()) {
                 if (visited.has(dino.id)) {
-                    console.log(`⚠️ Circular reference detected for ${dino.name}`);
                     return 0;
                 }
                 visited.add(dino.id);
                 
-                // Foundation animals (no parents)
                 if (!dino.parent1Id && !dino.parent2Id) {
                     return 0;
                 }
                 
-                // Find parents using ROBUST lookup
                 const parent1 = dino.parent1Id ? findDinoById(dino.parent1Id) : null;
                 const parent2 = dino.parent2Id ? findDinoById(dino.parent2Id) : null;
                 
-                // If any parent is missing, this is an orphan
                 if ((dino.parent1Id && !parent1) || (dino.parent2Id && !parent2)) {
-                    console.log(`🚫 ${dino.name} is orphaned - missing parent data`);
                     return -1;
                 }
                 
-                // Calculate parent generations
                 let maxParentGen = 0;
                 if (parent1) {
                     maxParentGen = Math.max(maxParentGen, calculateGeneration(parent1, new Set(visited)));
@@ -2448,18 +4050,17 @@
                 }
             });
             
-            console.log(`📋 Family tree built: ${generationMap.size} generations, ${orphans.length} orphans`);
-            
             return {
                 generations: generationMap,
                 orphans: orphans
             };
         }
 
-        // Render generational lineage tree
         function renderLineageTree() {
             const treeContainer = document.getElementById('lineageTree');
-            const speciesFilter = document.getElementById('speciesFilter').value;
+            const speciesFilter = document.getElementById('speciesFilter');
+            
+            if (!treeContainer) return;
             
             if (dinosaurs.length === 0) {
                 treeContainer.innerHTML = '<p style="text-align: center; color: #94a3b8;">No dinosaurs to display lineage for</p>';
@@ -2475,7 +4076,7 @@
                 const dinosInGeneration = familyData.generations.get(generation);
                 
                 const filteredDinos = dinosInGeneration.filter(dino => 
-                    speciesFilter === 'all' || dino.species === speciesFilter
+                    !speciesFilter || speciesFilter.value === 'all' || dino.species === speciesFilter.value
                 );
                 
                 if (filteredDinos.length > 0) {
@@ -2493,7 +4094,7 @@
             });
             
             const filteredOrphans = familyData.orphans.filter(dino =>
-                speciesFilter === 'all' || dino.species === speciesFilter
+                !speciesFilter || speciesFilter.value === 'all' || dino.species === speciesFilter.value
             );
             
             if (filteredOrphans.length > 0) {
@@ -2520,18 +4121,15 @@
             const finalLevel = dino.level + totalLevels;
             const genderClass = dino.gender === 'Male' ? 'male' : 'female';
             
-            // Get favorite stats
             let favoriteStats = [];
             Object.entries(dino.stats).forEach(([stat, data]) => {
                 if (data.favorite) {
-                    favoriteStats.push(`${statConfig[stat].name}: ${formatStatValue(data.value, stat)}`);
+                    favoriteStats.push(`${statConfig[stat].name}: ${formatStatValue(calculateStatValue(dino, stat), stat)}`);
                 }
             });
             
-            // Check if this dino has children
             const hasChildren = getChildren(dino.id).length > 0;
             
-            // Show parents info for non-foundation animals
             let parentInfo = '';
             if (generation > 0) {
                 const parents = getParents(dino);
@@ -2581,7 +4179,7 @@
             let favoriteStats = [];
             Object.entries(dino.stats).forEach(([stat, data]) => {
                 if (data.favorite) {
-                    favoriteStats.push(`${statConfig[stat].name}: ${formatStatValue(data.value, stat)}`);
+                    favoriteStats.push(`${statConfig[stat].name}: ${formatStatValue(calculateStatValue(dino, stat), stat)}`);
                 }
             });
             
@@ -2600,59 +4198,32 @@
             `;
         }
 
-        // ROBUST Lineage hover highlighting with clean ID system
         function highlightRelations(dinoId) {
-            console.log(`=== HOVER DEBUG (Clean ID System) ===`);
-            console.log(`Hovered dino ID: ${dinoId} (type: ${typeof dinoId})`);
-            
             clearHighlights();
             
             const currentDino = findDinoById(dinoId);
-            if (!currentDino) {
-                console.log(`❌ ERROR: Dino with ID ${dinoId} not found`);
-                return;
-            }
+            if (!currentDino) return;
             
-            console.log(`Hovered dino: ${currentDino.name} (ID: ${currentDino.id})`);
-            
-            // Get parent and children IDs using ROBUST functions
             const parents = getParents(currentDino);
             const children = getChildren(currentDino.id);
             const parentIds = parents.map(p => p.id);
             const childrenIds = children.map(c => c.id);
             
-            console.log(`Parents: [${parents.map(p => `${p.name} (${p.id})`).join(', ')}]`);
-            console.log(`Children: [${children.map(c => `${c.name} (${c.id})`).join(', ')}]`);
-            
-            // Get all lineage nodes
             const allNodes = document.querySelectorAll('.lineage-dino-node');
-            console.log(`Total lineage nodes found: ${allNodes.length}`);
-            
-            let currentCount = 0;
-            let parentCount = 0;
-            let childCount = 0;
             
             allNodes.forEach(node => {
                 const nodeId = parseInt(node.dataset.dinoId);
-                const nodeName = node.dataset.dinoName || 'Unknown';
                 
                 if (nodeId === dinoId) {
-                    console.log(`✅ WHITE (Current): ${nodeName} (${nodeId})`);
-                    currentCount++;
+                    // Current node stays as is (white highlight on hover)
                 } else if (parentIds.includes(nodeId)) {
-                    console.log(`🔵 CYAN (Parent): ${nodeName} (${nodeId})`);
                     node.classList.add('highlight-parent');
-                    parentCount++;
                 } else if (childrenIds.includes(nodeId)) {
-                    console.log(`🟡 GOLD (Child): ${nodeName} (${nodeId})`);
                     node.classList.add('highlight-child');
-                    childCount++;
                 } else {
                     node.classList.add('dim');
                 }
             });
-            
-            console.log(`HIGHLIGHT SUMMARY - Current: ${currentCount}, Parents: ${parentCount}, Children: ${childCount}`);
         }
         
         function clearHighlights() {
@@ -2662,13 +4233,66 @@
             });
         }
 
-        // Export data
+        // ===============================================
+        // DATA MANAGEMENT
+        // ===============================================
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('arkBreedingData');
+                if (saved) {
+                    dinosaurs = JSON.parse(saved);
+                    // Ensure all dinosaurs have proper stat structure
+                    dinosaurs.forEach(dino => {
+                        Object.keys(statConfig).forEach(statName => {
+                            if (!dino.stats[statName]) {
+                                dino.stats[statName] = {
+                                    value: 0,
+                                    wild: 0,
+                                    mutations: 0,
+                                    tamed: 0,
+                                    favorite: false,
+                                    isDnaLinked: false,
+                                    sourceParentId: null
+                                };
+                            } else {
+                                // Ensure new properties exist
+                                if (dino.stats[statName].isDnaLinked === undefined) {
+                                    dino.stats[statName].isDnaLinked = false;
+                                }
+                                if (dino.stats[statName].sourceParentId === undefined) {
+                                    dino.stats[statName].sourceParentId = null;
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                const savedSpecies = localStorage.getItem('arkSpeciesList');
+                if (savedSpecies) {
+                    customSpeciesList = JSON.parse(savedSpecies);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                dinosaurs = [];
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('arkBreedingData', JSON.stringify(dinosaurs));
+                localStorage.setItem('arkSpeciesList', JSON.stringify(customSpeciesList));
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+        }
+
         function exportData() {
             const exportData = {
                 dinosaurs: dinosaurs,
                 species: customSpeciesList,
                 exportDate: new Date().toISOString(),
-                version: '2.0' // Updated version for clean ID system
+                version: '4.0'
             };
             
             const dataStr = JSON.stringify(exportData, null, 2);
@@ -2676,11 +4300,10 @@
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = `ark-breeding-data-clean-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `ark-breeding-enhanced-${new Date().toISOString().split('T')[0]}.json`;
             link.click();
         }
 
-        // ROBUST Import data with clean ID migration
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2697,8 +4320,7 @@
                     const importCount = importedData.dinosaurs.length;
                     const speciesCount = importedData.species ? importedData.species.length : 0;
                     
-                    if (confirm(`Import ${importCount} dinosaurs and ${speciesCount} species? This will merge with your existing data and assign clean IDs.`)) {
-                        // Merge species first
+                    if (confirm(`Import ${importCount} dinosaurs and ${speciesCount} species? This will merge with your existing data.`)) {
                         if (importedData.species) {
                             importedData.species.forEach(species => {
                                 if (!customSpeciesList.includes(species)) {
@@ -2707,72 +4329,27 @@
                             });
                         }
                         
-                        // Handle dinosaur conflicts
-                        const conflicts = [];
-                        importedData.dinosaurs.forEach(importDino => {
-                            const existing = dinosaurs.find(d => d.name === importDino.name && d.species === importDino.species);
-                            if (existing) {
-                                conflicts.push(importDino.name);
-                            }
-                        });
-                        
-                        if (conflicts.length > 0 && !confirm(`${conflicts.length} dinosaurs have name conflicts: ${conflicts.slice(0, 3).join(', ')}${conflicts.length > 3 ? '...' : ''}. Continue import? (Conflicting names will get "(Imported)" suffix)`)) {
-                            return;
-                        }
-                        
-                        // Import dinosaurs with CLEAN IDs - no parent references yet
-                        const idMapping = new Map();
                         importedData.dinosaurs.forEach(importDino => {
                             const existing = dinosaurs.find(d => d.name === importDino.name && d.species === importDino.species);
                             if (existing) {
                                 importDino.name += ' (Imported)';
                             }
                             
-                            // Store old ID for mapping
-                            const oldId = importDino.id;
-                            const newId = generateId();
-                            idMapping.set(oldId, newId);
-                            
-                            // Assign clean ID and clear parent references temporarily
-                            importDino.id = newId;
-                            importDino.tempParent1Id = importDino.parent1Id;
-                            importDino.tempParent2Id = importDino.parent2Id;
-                            importDino.parent1Id = null;
-                            importDino.parent2Id = null;
-                            
+                            importDino.id = generateId();
                             dinosaurs.push(importDino);
-                        });
-                        
-                        // Now fix parent references using the mapping
-                        dinosaurs.forEach(dino => {
-                            if (dino.tempParent1Id) {
-                                const newParent1Id = idMapping.get(dino.tempParent1Id);
-                                if (newParent1Id) {
-                                    dino.parent1Id = newParent1Id;
-                                }
-                                delete dino.tempParent1Id;
-                            }
-                            
-                            if (dino.tempParent2Id) {
-                                const newParent2Id = idMapping.get(dino.tempParent2Id);
-                                if (newParent2Id) {
-                                    dino.parent2Id = newParent2Id;
-                                }
-                                delete dino.tempParent2Id;
-                            }
                         });
                         
                         updateNextId();
                         saveData();
                         populateSpeciesDropdown();
                         populateMainSpeciesFilter();
+                        populateSpeciesFilter();
                         renderDinosaurs();
                         updateParentSelects();
                         updateModalParentSelects();
-                        populateSpeciesFilter();
-                        updateBreedingPreview();
+                        populatePerfectParentSelects();
                         
-                        alert(`Successfully imported ${importCount} dinosaurs with clean IDs!`);
+                        alert(`Successfully imported ${importCount} dinosaurs!`);
                     }
                 } catch (error) {
                     alert('Error importing file: ' + error.message);
@@ -2783,27 +4360,52 @@
             event.target.value = '';
         }
 
-        // Handle Enter key for adding species  
+        // ===============================================
+        // INITIALIZATION
+        // ===============================================
+
         document.addEventListener('DOMContentLoaded', function() {
-            const newSpeciesInput = document.getElementById('newSpecies');
-            if (newSpeciesInput) {
-                newSpeciesInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        addSpecies();
-                    }
-                });
+            try {
+                console.log('🚀 Initializing Enhanced ARK Breeding Tracker...');
+                
+                loadData();
+                updateNextId();
+                populateSpeciesDropdown();
+                
+                console.log('📋 Creating stats form...');
+                createStatsForm();
+                
+                console.log('🦕 Rendering dinosaurs...');
+                renderDinosaurs();
+                
+                updateParentSelects();
+                updateModalParentSelects();
+                populateMainSpeciesFilter();
+                populateSpeciesFilter();
+                
+                // Event listeners
+                const newSpeciesInput = document.getElementById('newSpecies');
+                if (newSpeciesInput) {
+                    newSpeciesInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            addSpecies();
+                        }
+                    });
+                }
+                
+                // Initial backup reminder check
+                setTimeout(checkBackupReminder, 2000);
+                
+                console.log('✅ Enhanced ARK Breeding Tracker initialized successfully!');
+                console.log('🧬 Enhanced features: Searchable dropdowns, Smart notifications, Mobile experience');
+                console.log('🧬 Advanced features: Inline parent selection, DNA linking, inheritance tracking, cascade updates');
+            } catch (error) {
+                console.error('❌ Error during initialization:', error);
+                showNotification('❌ Initialization Error', 'There was an error initializing the application. Please refresh the page and try again.', 'warning');
             }
         });
 
-        // Update level calculation when level changes
-        document.addEventListener('DOMContentLoaded', function() {
-            const dinoLevelInput = document.getElementById('dinoLevel');
-            if (dinoLevelInput) {
-                dinoLevelInput.addEventListener('input', updateLevelCalculation);
-            }
-        });
-
-        // Close modal when clicking outside
+        // Modal close on outside click
         window.onclick = function(event) {
             const modal = document.getElementById('modal');
             if (event.target === modal) {
