@@ -244,6 +244,19 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(34, 211, 238, 0.15);
         }
+		
+		.dino-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .dino-card.drag-over-left {
+            border-left: 4px solid #22d3ee;
+        }
+
+        .dino-card.drag-over-right {
+            border-right: 4px solid #22d3ee;
+        }
 
         .dino-header {
             display: flex;
@@ -3394,6 +3407,80 @@
                 </div>
             `).join('');
         }
+		
+		// DRAG AND DROP
+		// Drag and drop functionality
+        function setupDragAndDrop() {
+            const dinoCards = document.querySelectorAll('.dino-card');
+            
+            dinoCards.forEach(card => {
+                card.draggable = true;
+                
+                card.addEventListener('dragstart', (e) => {
+                    card.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', card.dataset.dinoId);
+                });
+                
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                });
+                
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    
+                    const rect = card.getBoundingClientRect();
+                    const midpoint = rect.left + rect.width / 2;
+                    const isLeftSide = e.clientX < midpoint;
+                    
+                    card.classList.remove('drag-over-left', 'drag-over-right');
+                    
+                    if (isLeftSide) {
+                        card.classList.add('drag-over-left');
+                    } else {
+                        card.classList.add('drag-over-right');
+                    }
+                });
+                
+                card.addEventListener('dragleave', () => {
+                    card.classList.remove('drag-over-left', 'drag-over-right');
+                });
+                
+                card.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over-left', 'drag-over-right');
+                    
+                    const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+                    const targetId = parseInt(card.dataset.dinoId);
+                    
+                    if (draggedId !== targetId) {
+                        const rect = card.getBoundingClientRect();
+                        const midpoint = rect.left + rect.width / 2;
+                        const isLeftSide = e.clientX < midpoint;
+                        
+                        const draggedIndex = dinosaurs.findIndex(d => d.id === draggedId);
+                        const targetIndex = dinosaurs.findIndex(d => d.id === targetId);
+                        
+                        if (draggedIndex !== -1 && targetIndex !== -1) {
+                            const draggedDino = dinosaurs.splice(draggedIndex, 1)[0];
+                            
+                            let insertIndex = targetIndex;
+                            if (draggedIndex < targetIndex) {
+                                insertIndex--;
+                            }
+                            
+                            if (!isLeftSide) {
+                                insertIndex++;
+                            }
+                            
+                            dinosaurs.splice(insertIndex, 0, draggedDino);
+                            
+                            saveData();
+                            renderDinosaurs();
+                        }
+                    }
+                });
+            });
+        }
 
         // ===============================================
         // RENDERING AND DISPLAY
@@ -3492,6 +3579,8 @@
                     </div>
                 `;
             }).join('');
+			
+			setupDragAndDrop();
         }
 
         // ===============================================
