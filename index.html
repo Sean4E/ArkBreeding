@@ -3906,6 +3906,7 @@ Type "DELETE ALL" to confirm:`;
             if (checkbox && preferences) {
                 if (checkbox.checked) {
                     preferences.style.display = 'grid';
+					setupStatPreferenceListeners(); // Add this line
                 } else {
                     preferences.style.display = 'none';
                 }
@@ -4168,13 +4169,16 @@ Type "DELETE ALL" to confirm:`;
         }
 
         function setupStatPreferenceListeners() {
-            Object.keys(statConfig).forEach(stat => {
-                const select = document.getElementById(`${stat}Pref`);
-                if (select) {
-                    select.addEventListener('change', updateBreedingPreview);
-                }
-            });
-        }
+			Object.keys(statConfig).forEach(stat => {
+				const select = document.getElementById(`${stat}Pref`);
+				if (select) {
+					// Remove any existing listeners first to prevent duplicates
+					select.replaceWith(select.cloneNode(true));
+					// Add new listener
+					document.getElementById(`${stat}Pref`).addEventListener('change', updateBreedingPreview);
+				}
+			});
+		}
 
         // ===============================================
         // LINEAGE TREE FUNCTIONS
@@ -4582,6 +4586,7 @@ Type "DELETE ALL" to confirm:`;
                 updateModalParentSelects();
                 populateMainSpeciesFilter();
                 populateSpeciesFilter();
+				setupStatPreferenceListeners(); // Add this line
                 
                 // Event listeners
                 const newSpeciesInput = document.getElementById('newSpecies');
