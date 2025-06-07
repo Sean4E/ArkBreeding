@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARK Breeding Tracker - Enhanced</title>
+    <title>ARK Breeding Planner</title>
     <style>
         * {
             margin: 0;
@@ -42,7 +42,7 @@
             font-weight: bold;
             color: #22d3ee;
         }
-
+		
         .btn {
             background-color: #0891b2;
             color: white;
@@ -57,6 +57,27 @@
         .btn:hover {
             background-color: #0e7490;
         }
+		
+		.btn-primary {
+            background: linear-gradient(135deg, #0891b2, #22d3ee);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #22d3ee, #0891b2);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+        }
 
         .btn-danger {
             background-color: #dc2626;
@@ -64,6 +85,22 @@
 
         .btn-danger:hover {
             background-color: #b91c1c;
+        }
+		
+		.btn-danger-outline {
+            background: none;
+            border: 2px solid #dc2626;
+            color: #dc2626;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-danger-outline:hover {
+            background-color: #dc2626;
+            color: white;
         }
 
         .btn-small {
@@ -1395,7 +1432,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title">ARK Breeding Tracker - Enhanced</h1>
+            <h1 class="title">
+				<!-- <img src="images/ASA_Logo.png" alt="ARK" class="title-icon"> -->
+				ARK Breeding Planner
+			</h1>
             <div class="header-actions">
                 <div class="import-export-section">
                     <div class="import-export-actions">
@@ -1404,9 +1444,10 @@
                         <input type="file" id="importFile" class="file-input" accept=".json" onchange="importData(event)">
                         <button class="btn btn-small mobile-friendly-btn" onclick="toggleLineageTree()">🌳 Lineage</button>
                         <button class="btn btn-small mobile-friendly-btn" onclick="toggleMutationPlanner()">🧬 Mutation Planner</button>
+						<button class="btn-danger-outline btn-small mobile-friendly-btn" onclick="clearAllData()">🗑️ Clear All</button>
                     </div>
                 </div>
-                <button class="btn mobile-friendly-btn" onclick="openAddForm()">+ Add Dinosaur</button>
+                <button class="btn-primary mobile-friendly-btn" onclick="openAddForm()">+ Add Dinosaur</button>
             </div>
         </div>
 
@@ -2079,6 +2120,76 @@
         }
 
         // ===============================================
+        // CLEAR ALL DATA FUNCTION
+        // ===============================================
+
+        function clearAllData() {
+            const confirmText = `⚠️ DANGER: Clear All Data ⚠️
+
+This will permanently delete:
+• All ${dinosaurs.length} dinosaurs
+• All breeding calculations
+• All custom species
+• All lineage data
+
+This action CANNOT be undone!
+
+Type "DELETE ALL" to confirm:`;
+
+            const userInput = prompt(confirmText);
+            
+            if (userInput === "DELETE ALL") {
+                // Clear all data
+                dinosaurs = [];
+                customSpeciesList = [
+                    'Rex', 'Raptor', 'Spino', 'Carno', 'Trike', 'Stego', 'Bronto', 'Parasaur', 'Dilo', 'Compy',
+                    'Argentavis', 'Pteranodon', 'Quetzal', 'Ankylo', 'Doed', 'Beaver', 'Mammoth', 'Theri', 'Giga',
+                    'Mosasaur', 'Megalodon', 'Plesi', 'Ichthy', 'Sarco', 'Bary', 'Kapro', 'Arthro', 'Scorp', 'Spider',
+                    'Griffin', 'Phoenix', 'Wyvern', 'Drake', 'Basilisk', 'Reaper', 'Karkinos', 'Ravager', 'Enforcer'
+                ];
+                nextId = 1;
+                currentPotentialOffspring = null;
+                
+                // Clear localStorage
+                localStorage.removeItem('arkBreedingData');
+                localStorage.removeItem('arkSpeciesList');
+                localStorage.removeItem('lastBackupReminder');
+                
+                // Update UI
+                populateSpeciesDropdown();
+                populateMainSpeciesFilter();
+                populateSpeciesFilter();
+                renderDinosaurs();
+                updateParentSelects();
+                updateModalParentSelects();
+                populatePerfectParentSelects();
+                updateBreedingPreview();
+                
+                // Hide sections that might be open
+                document.getElementById('lineageSection').style.display = 'none';
+                document.getElementById('mutationSection').style.display = 'none';
+                document.getElementById('breedingPreview').style.display = 'none';
+                document.getElementById('mutationPlanDisplay').style.display = 'none';
+                
+                showNotification(
+                    '🗑️ Data Cleared',
+                    'All data has been permanently deleted. Starting fresh!',
+                    'info',
+                    null,
+                    3000
+                );
+            } else if (userInput !== null) {
+                showNotification(
+                    '🛡️ Operation Cancelled',
+                    'Data clear cancelled - incorrect confirmation text.',
+                    'info',
+                    null,
+                    3000
+                );
+            }
+        }
+		
+		// ===============================================
         // MUTATION PLANNER FUNCTIONS
         // ===============================================
 
